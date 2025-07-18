@@ -10,16 +10,18 @@ from dotenv import load_dotenv
 load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
+# Configuration des raretés
 class HeroRarity(Enum):
-    COMMUN = ("vert", "🟢", 1,"Commun")
-    RARE = ("bleu", "🔵", 2,"Rare")
-    EPIQUE = ("violet", "🟣", 3,"Epique")
-    LEGENDAIRE = ("or", "🟡", 4,"Légendaire")
+    COMMUN = ("vert", "🟢", 1, "Commun")
+    RARE = ("bleu", "🔵", 2, "Rare")
+    EPIQUE = ("violet", "🟣", 3, "Epique")
+    LEGENDAIRE = ("or", "🟡", 4, "Légendaire")
 
-    def __init__(self, color, emoji, rank):
+    def __init__(self, color, emoji, rank, display_name):
         self._color = color
         self._emoji = emoji
         self._rank = rank
+        self._display_name = display_name
 
     @property
     def color(self):
@@ -32,20 +34,25 @@ class HeroRarity(Enum):
     @property
     def rank(self):
         return self._rank
+
+    @property
+    def display_name(self):
+        return self._display_name
 
 class ItemRarity(Enum):
-    COMMUN = ("gris", "⚪", 1,"Commun")
-    RARE = ("bleu", "🔵", 2,"Rare")
-    EPIQUE = ("violet", "🟣", 3,"Epique")
-    LEGENDAIRE = ("or", "🟡", 4,"Legendaire")
-    MYTHIQUE = ("rose","🩷",5,"Mythique")
-    DIVIN = ("rouge","🔴",6,"Divin")
-    SUPREME = ("orange","🟠",7,"Suprême")
+    COMMUN = ("gris", "⚪", 1, "Commun")
+    RARE = ("bleu", "🔵", 2, "Rare")
+    EPIQUE = ("violet", "🟣", 3, "Epique")
+    LEGENDAIRE = ("or", "🟡", 4, "Legendaire")
+    MYTHIQUE = ("rose", "🩷", 5, "Mythique")
+    DIVIN = ("rouge", "🔴", 6, "Divin")
+    SUPREME = ("orange", "🟠", 7, "Suprême")
 
-    def __init__(self, color, emoji, rank):
+    def __init__(self, color, emoji, rank, display_name):
         self._color = color
         self._emoji = emoji
         self._rank = rank
+        self._display_name = display_name
 
     @property
     def color(self):
@@ -58,6 +65,10 @@ class ItemRarity(Enum):
     @property
     def rank(self):
         return self._rank
+
+    @property
+    def display_name(self):
+        return self._display_name
 
 class HeroClass(Enum):
     GLADIATEUR = "Gladiateur"
