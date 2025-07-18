@@ -6,6 +6,8 @@ from enum import Enum
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional
 import os
+from dotenv import load_dotenv
+load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
 class HeroRarity(Enum):
