@@ -160,48 +160,71 @@ class HeroBot(commands.Bot):
         # Charger les données depuis des fichiers JSON
         self.load_data()
     
-    def load_data(self):
-        try:
-            with open('heroes.json', 'r', encoding='utf-8') as f:
-                heroes_data = json.load(f)
-                for hero_data in heroes_data:
-                    # Convertir la string en enum par le nom
-                    rarity_name = hero_data['rarity'].upper()
-                    hero_rarity = HeroRarity[rarity_name]
-                
-                    hero_class_name = hero_data['hero_class'].upper()
-                    hero_class = HeroClass[hero_class_name]
-                
-                    hero = Hero(
-                        id=hero_data['id'],
-                        name=hero_data['name'],
-                        rarity=hero_rarity,
-                        hero_class=hero_class,
-                        image=hero_data['image'],
-                        price=hero_data['price'],
-                        description=hero_data.get('description', ''),
-                        equipped_items=hero_data.get('equipped_items', [])
-                    )
-                    self.heroes_db[hero.id] = hero
-        except FileNotFoundError:
-            print("Fichier heroes.json non trouvé")
-        except KeyError as e:
-            print(f"Erreur de clé dans heroes.json: {e}")
+def load_data(self):
+    """Charge les données depuis des fichiers JSON"""
+    # Mapping pour les noms de classes avec accents
+    class_mapping = {
+        'GÉNÉRAL': 'GENERAL',
+        'GLADIATEUR': 'GLADIATEUR',
+        'MAGE': 'MAGE',
+        'VOLEUR': 'VOLEUR',
+        'PALADIN': 'PALADIN',
+        'SAGE': 'SAGE',
+        'NÉCROMANCIEN': 'NECROMANCIEN',
+        'MAÎTRE MÉCA': 'MAITRE_MECA'
+    }
     
-        try:
-            with open('items.json', 'r', encoding='utf-8') as f:
-                items_data = json.load(f)
+    try:
+        with open('heroes.json', 'r', encoding='utf-8') as f:
+            heroes_data = json.load(f)
+            for hero_data in heroes_data:
+                # Convertir la string en enum par le nom
+                rarity_name = hero_data['rarity'].upper()
+                hero_rarity = HeroRarity[rarity_name]
+                
+                # Gérer les noms de classes avec accents
+                hero_class_name = hero_data['hero_class'].upper()
+                if hero_class_name in class_mapping:
+                    hero_class_name = class_mapping[hero_class_name]
+                hero_class = HeroClass[hero_class_name]
+                
+                hero = Hero(
+                    id=hero_data['id'],
+                    name=hero_data['name'],
+                    rarity=hero_rarity,
+                    hero_class=hero_class,
+                    image=hero_data['image'],
+                    price=hero_data['price'],
+                    description=hero_data.get('description', ''),
+                    equipped_items=hero_data.get('equipped_items', [])
+                )
+                self.heroes_db[hero.id] = hero
+    except FileNotFoundError:
+        print("Fichier heroes.json non trouvé")
+    except KeyError as e:
+        print(f"Erreur de clé dans heroes.json: {e}")
+    except Exception as e:
+        print(f"Erreur lors du chargement des héros: {e}")
+    
+    try:
+        with open('items.json', 'r', encoding='utf-8') as f:
+            items_data = json.load(f)
+            # Vérifier si items_data est une liste
+            if isinstance(items_data, list):
                 for item_data in items_data:
                     # Convertir la string en enum par le nom
                     rarity_name = item_data['rarity'].upper()
                     item_rarity = ItemRarity[rarity_name]
-                
+                    
                     # Convertir les classes compatibles
                     compatible_classes = []
                     for class_name in item_data['compatible_classes']:
-                        class_enum = HeroClass[class_name.upper()]
+                        class_name_upper = class_name.upper()
+                        if class_name_upper in class_mapping:
+                            class_name_upper = class_mapping[class_name_upper]
+                        class_enum = HeroClass[class_name_upper]
                         compatible_classes.append(class_enum)
-                
+                    
                     item = Item(
                         id=item_data['id'],
                         name=item_data['name'],
@@ -213,24 +236,28 @@ class HeroBot(commands.Bot):
                         description=item_data.get('description', '')
                     )
                     self.items_db[item.id] = item
-        except FileNotFoundError:
-            print("Fichier items.json non trouvé")
-        except KeyError as e:
-            print(f"Erreur de clé dans items.json: {e}")
+    except FileNotFoundError:
+        print("Fichier items.json non trouvé")
+    except KeyError as e:
+        print(f"Erreur de clé dans items.json: {e}")
+    except Exception as e:
+        print(f"Erreur lors du chargement des items: {e}")
     
-        try:
-            with open('players.json', 'r', encoding='utf-8') as f:
-                players_data = json.load(f)
-                for player_data in players_data:
-                    player = PlayerData(
-                        user_id=player_data['user_id'],
-                        coins=player_data['coins'],
-                        heroes=player_data['heroes'],
-                        items=player_data['items']
-                    )
-                    self.players[player.user_id] = player
-        except FileNotFoundError:
-            print("Fichier players.json non trouvé")
+    try:
+        with open('players.json', 'r', encoding='utf-8') as f:
+            players_data = json.load(f)
+            for player_data in players_data:
+                player = PlayerData(
+                    user_id=player_data['user_id'],
+                    coins=player_data['coins'],
+                    heroes=player_data['heroes'],
+                    items=player_data['items']
+                )
+                self.players[player.user_id] = player
+    except FileNotFoundError:
+        print("Fichier players.json non trouvé")
+    except Exception as e:
+        print(f"Erreur lors du chargement des joueurs: {e}")
     
     def save_data(self):
         """Sauvegarde les données dans des fichiers JSON"""
