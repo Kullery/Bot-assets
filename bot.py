@@ -11,10 +11,10 @@ load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
 class HeroRarity(Enum):
-    COMMUN = ("vert", "🟢", 1)
-    RARE = ("bleu", "🔵", 2)
-    EPIQUE = ("violet", "🟣", 3)
-    LEGENDAIRE = ("or", "🟡", 4)
+    COMMUN = ("vert", "🟢", 1,"Commun")
+    RARE = ("bleu", "🔵", 2,"Rare")
+    EPIQUE = ("violet", "🟣", 3,"Epique")
+    LEGENDAIRE = ("or", "🟡", 4,"Légendaire")
 
     def __init__(self, color, emoji, rank):
         self._color = color
@@ -34,10 +34,13 @@ class HeroRarity(Enum):
         return self._rank
 
 class ItemRarity(Enum):
-    COMMUN = ("gris", "⚪", 1)
-    RARE = ("bleu", "🔵", 2)
-    EPIQUE = ("violet", "🟣", 3)
-    LEGENDAIRE = ("or", "🟡", 4)
+    COMMUN = ("gris", "⚪", 1,"Common")
+    RARE = ("bleu", "🔵", 2,"Rare")
+    EPIQUE = ("violet", "🟣", 3,"Epic")
+    LEGENDAIRE = ("or", "🟡", 4,"Legendary")
+    MYTHIQUE = ("rose","🩷",5,"Mythique")
+    DIVIN = ("rouge","🔴",6,"Divin")
+    SUPREME = ("orange","🟠",7,"Suprême")
 
     def __init__(self, color, emoji, rank):
         self._color = color
