@@ -541,7 +541,7 @@ async def hero_details(ctx, hero_id: int):
     )
     embed.set_image(url=hero.image)
     embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
-    embed.add_field(name="Rareté", value=hero.rarity.color, inline=True)
+    embed.add_field(name="Rareté", value=hero.rarity, inline=True)
     embed.add_field(name="Items équipés", value=f"{len(hero.equipped_items)}/6", inline=True)
     
     if hero.equipped_items:
