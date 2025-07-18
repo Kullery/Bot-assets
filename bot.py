@@ -34,18 +34,27 @@ class HeroRarity(Enum):
         return self._rank
 
 class ItemRarity(Enum):
-    Commun = ("vert", "🟢", 1)
-    Rare = ("bleu", "🔵", 2)
-    Epique = ("violet", "🟣", 3)
-    Légendaire = ("or", "🟡", 4)
-    Mythique = ("rose", "🌸", 5)
-    Divin = ("rouge", "🔴", 6)
-    Suprême = ("orange", "🟠", 7)
-    
-    def __init__(self, color, emoji, value):
-        self.color = color
-        self.emoji = emoji
-        self.value = value
+    COMMUN = ("gris", "⚪", 1)
+    RARE = ("bleu", "🔵", 2)
+    EPIQUE = ("violet", "🟣", 3)
+    LEGENDAIRE = ("or", "🟡", 4)
+
+    def __init__(self, color, emoji, rank):
+        self._color = color
+        self._emoji = emoji
+        self._rank = rank
+
+    @property
+    def color(self):
+        return self._color
+
+    @property
+    def emoji(self):
+        return self._emoji
+
+    @property
+    def rank(self):
+        return self._rank
 
 class HeroClass(Enum):
     Gladiateur = "Gladiateur"
