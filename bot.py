@@ -161,16 +161,22 @@ class HeroBot(commands.Bot):
         self.load_data()
     
     def load_data(self):
-        """Charge les données depuis des fichiers JSON"""
         try:
             with open('heroes.json', 'r', encoding='utf-8') as f:
                 heroes_data = json.load(f)
                 for hero_data in heroes_data:
+                    # Convertir la string en enum par le nom
+                    rarity_name = hero_data['rarity'].upper()
+                    hero_rarity = HeroRarity[rarity_name]
+                
+                    hero_class_name = hero_data['hero_class'].upper()
+                    hero_class = HeroClass[hero_class_name]
+                
                     hero = Hero(
                         id=hero_data['id'],
                         name=hero_data['name'],
-                        rarity=HeroRarity(hero_data['rarity']),
-                        hero_class=HeroClass(hero_data['hero_class']),
+                        rarity=hero_rarity,
+                        hero_class=hero_class,
                         image=hero_data['image'],
                         price=hero_data['price'],
                         description=hero_data.get('description', ''),
@@ -179,16 +185,28 @@ class HeroBot(commands.Bot):
                     self.heroes_db[hero.id] = hero
         except FileNotFoundError:
             print("Fichier heroes.json non trouvé")
-        
+        except KeyError as e:
+            print(f"Erreur de clé dans heroes.json: {e}")
+    
         try:
             with open('items.json', 'r', encoding='utf-8') as f:
                 items_data = json.load(f)
                 for item_data in items_data:
+                    # Convertir la string en enum par le nom
+                    rarity_name = item_data['rarity'].upper()
+                    item_rarity = ItemRarity[rarity_name]
+                
+                    # Convertir les classes compatibles
+                    compatible_classes = []
+                    for class_name in item_data['compatible_classes']:
+                        class_enum = HeroClass[class_name.upper()]
+                        compatible_classes.append(class_enum)
+                
                     item = Item(
                         id=item_data['id'],
                         name=item_data['name'],
-                        rarity=ItemRarity(item_data['rarity']),
-                        compatible_classes=[HeroClass(c) for c in item_data['compatible_classes']],
+                        rarity=item_rarity,
+                        compatible_classes=compatible_classes,
                         image=item_data['image'],
                         price=item_data['price'],
                         stats=item_data['stats'],
@@ -197,7 +215,9 @@ class HeroBot(commands.Bot):
                     self.items_db[item.id] = item
         except FileNotFoundError:
             print("Fichier items.json non trouvé")
-        
+        except KeyError as e:
+            print(f"Erreur de clé dans items.json: {e}")
+    
         try:
             with open('players.json', 'r', encoding='utf-8') as f:
                 players_data = json.load(f)
