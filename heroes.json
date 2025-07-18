@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "name": "Avalon",
+    "rarity": "Commun",
+    "hero_class": "Général",
+    "price": 100,
+    "description": "Prince déchu des Ailes d'argent, Avalon cherche à dresser une armée et à récupérer sa terre natale sur le lointain continent de Drake.",
+    "equipped_items": [],
+    "image": "Héros/Avalon1.png"
+  }
+
+]

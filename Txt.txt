@@ -1,0 +1,752 @@
+import discord
+import random
+import json
+import os
+from discord.ext import commands
+from collections import defaultdict
+
+# Configuration des classes de héros
+HERO_CLASSES = {
+    'Gladiateur': {
+        'description': 'Combattant de l\'arène, maître du combat rapproché',
+        'equipment_slots': ['arme1', 'arme2', 'casque', 'armure', 'babiole1', 'babiole2'],
+        'color': 0xFF4444,
+        'emoji': '⚔️'
+    },
+    'Général': {
+        'description': 'Stratège militaire, leader sur le champ de bataille',
+        'equipment_slots': ['arme', 'bannière', 'casque', 'armure', 'babiole1', 'babiole2'],
+        'color': 0x8B4513,
+        'emoji': '🛡️'
+    },
+    'Sage': {
+        'description': 'Érudit ancien, gardien de la sagesse',
+        'equipment_slots': ['bâton', 'livre', 'casque', 'robe', 'babiole1', 'babiole2'],
+        'color': 0x4169E1,
+        'emoji': '📚'
+    },
+    'Mage': {
+        'description': 'Manipulateur d\'énergies magiques',
+        'equipment_slots': ['bâton', 'cape', 'casque', 'robe', 'babiole1', 'babiole2'],
+        'color': 0x9932CC,
+        'emoji': '🔮'
+    },
+    'Nécromancien': {
+        'description': 'Maître des arts interdits et de la mort',
+        'equipment_slots': ['bâton', 'cape', 'casque', 'robe', 'livre', 'babiole'],
+        'color': 0x2F4F2F,
+        'emoji': '💀'
+    },
+    'Paladin': {
+        'description': 'Champion de la lumière et de la justice',
+        'equipment_slots': ['arme', 'bouclier', 'casque', 'armure', 'babiole1', 'babiole2'],
+        'color': 0xFFD700,
+        'emoji': '✨'
+    },
+    'Voleur': {
+        'description': 'Maître de la discrétion et de la précision',
+        'equipment_slots': ['arme', 'arc', 'casque', 'armure', 'babiole1', 'babiole2'],
+        'color': 0x696969,
+        'emoji': '🗡️'
+    },
+    'Maître Méca': {
+        'description': 'Ingénieur de guerre et inventeur de technologies',
+        'equipment_slots': ['arme1', 'arme2', 'casque', 'armure', 'babiole1', 'babiole2'],
+        'color': 0x708090,
+        'emoji': '⚙️'
+    }
+}
+
+# Base de données des héros (à remplir avec tes 46 héros)
+HEROES_DATABASE = {
+    # Héros de départ (gratuits après le premier choix)
+    'starter_heroes': {
+        'Avril': {
+            'name': 'Avril',
+            'class': 'Mage',
+            'base_power': 120,
+            'cost': 0,  # Héros de départ
+            'rarity': 'starter',
+            'description': 'Dernière survivante des disciples du Temple de glace, Avril se bat pour préserver son héritage et fonder un nouveau temple, afin de protéger les terres de Nore.',
+            'image': 'Heroes/avril.webp'  # Nom de ton fichier image
+        },
+        'Avalon': {
+            'name': 'Avalon',
+            'class': 'Général',
+            'base_power': 110,
+            'cost': 0,
+            'rarity': 'starter',
+            'description': "Prince déchu des Ailes d'argent, Avalon cherche à dresser une armée et à récupérer sa terre natale sur le lointain continent de Drake.",
+            'image': 'Heroes/Avalon.jpg'
+        },
+        'Rufio': {
+            'name': 'Rufio',
+            'class': 'Gladiateur',
+            'base_power': 125,
+            'cost': 0,
+            'rarity': 'starter',
+            'description': 'Toute sa vie, Rufio a laissé une traînée de champions défaits dans son sillage. Il est impressionné par les combatants de Nore, et son but est devenu de les défier et de tous les vaincre.',
+            'image': 'Heroes/Rufio_portrait.webp'
+        }
+    },
+    
+    # Héros achetables (exemple de structure)
+    'shop_heroes': {
+        # Héros communs (prix bas)
+        'Virion': {
+            'name': 'Virion',
+            'class': 'Paladin',
+            'base_power': 130,
+            'cost': 500,
+            'rarity': 'common',
+            'description': "Virion était le Capitaine de la Garde royale avant la chute d'Aile d'argent. Il a accompagné la princesse Elena en Nore, protégeant son peuple grâce à la juste puissance de la lumière.",
+            'image': 'Heroes/Virion_portrait.webp'
+        },
+        'Vega': {
+            'name': 'Vega',
+            'class': 'Sage',
+            'base_power': 125,
+            'cost': 600,
+            'rarity': 'common',
+            'description': "Enfant des rues arrachée à sa condition par le temple du Soleil, Vega s'est métamorphosée en une puissante prêtresse.",
+            'image': 'Heroes/Vega_portrait.webp'
+        },
+        'Mako': {
+            'name': 'Mako',
+            'class': 'Voleur',
+            'base_power': 135,
+            'cost': 1000,
+            'rarity': 'common',
+            'description': 'Armé de sa fidèle fronde et de sa bande de turlupins, le jeune Mako régnait sur son village comme un fieffé roi bandit.',
+            'image': 'Heroes/Mako.webp'
+        },
+        'Gan': {
+            'name': 'Gan',
+            'class': 'Sage',
+            'base_power': 135,
+            'cost': 1000,
+            'rarity': 'common',
+            'description': "Reclu dans les bois depuis des années, il maîtrise l'art des forces de la forêt.",
+            'image': 'Heroes/Gan_portrait.webp'
+        },
+        
+        'Grimms': {
+            'name': 'Grimms',
+            'class': 'Général',
+            'base_power': 135,
+            'cost': 1000,
+            'rarity': 'common',
+            'description': 'Général nain, Grimms a fait ses preuves maintes fois en défendant les montagnes des morts-vivants maléfiques. Il a su également déloger les vicieux gobelins qui les parasitent.',
+            'image': 'Heroes/Grimms.webp'
+        },
+        
+        'Mako': {
+            'name': 'Mako',
+            'class': 'Voleur',
+            'base_power': 135,
+            'cost': 1000,
+            'rarity': 'common',
+            'description': 'Armé de sa fidèle fronde et de sa bande de turlupins, le jeune Mako régnait sur son village comme un fieffé roi bandit.',
+            'image': 'Heroes/Mako.webp'
+        },
+        'Cléo': {
+            'name': 'Cléo',
+            'class': 'Mage',
+            'base_power': 140,
+            'cost': 1200,
+            'rarity': 'rare',
+            'description': "Ultime enfant des mythes de Sphinx, Cléo est l'héritière d'une connaissance infinie. Elle méprise les ignorants, et pourtant, ceux-ci n'apprennent jamais à éviter sa colère.",
+            'image': 'Heroes/Cleo_portrait.webp'
+        },
+        'Nora': {
+            'name': 'Nora',
+            'class': 'Maître Méca',
+            'base_power': 125,
+            'cost': 1000,
+            'rarity': 'common',
+            'description': "Il est très pratique d'avoir un grand-père roi. Il vous laisse manquer les cours pour aller vous amuser sur le champ de bataille et tester vos nouvelles inventions.",
+            'image': 'Heroes/Nora_portrait.webp'
+        },
+        # Héros rares (prix moyen)
+        'Wraxius': {
+            'name': 'Wraxius',
+            'class': 'Mage',
+            'base_power': 135,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Désormais à l'apogée de sa puissance, Wraxius est de retour chez les vivants pour déchaîner l'énergie démoniaque de ses lanternes.",
+            'image': 'Heroes/Wraxius_portrait.webp'
+        },
+         'Lunella': {
+            'name': 'Lunella',
+            'class': 'Paladin',
+            'base_power': 140,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Lunella, la fille favorite de la Grande Prêtresse a été choisie parmi ses soeurs les dryades pour servir la déesse de la lune par-delà les côtes embrumées de Lunos.",
+            'image': 'Heroes/Lunella.webp'
+        },
+        'Elena': {
+            'name': 'Elena',
+            'class': 'Général',
+            'base_power': 135,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Princesse du royaume déchu d'Aile d'argent, Elena mena son peuple vers la sécurité, en Nore, où elle lutte pour devenir un chef fort et indépendant en l'absence de son frère, Avalon.",
+            'image': 'Heroes/Elena.webp'
+        },
+        'Bane': {
+            'name': 'Bane',
+            'class': 'Gladiateur',
+            'base_power': 135,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Bane sauva sa tribu barbare de la destruction avec l'aide d'Avril, bravant les flots déchaînés pour assurer le salut de son peuple en Nore.",
+            'image': 'Heroes/Bane_portrait.webp'
+        },
+        
+        'Gladys': {
+            'name': 'Gladys',
+            'class': 'Sage',
+            'base_power': 135,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Gladys a découvert le verre du vide par hasard. Pour aider sa soeur Melias à exaucer son rêve, elle a tout fait pour le contrôler. Malgré des difficultés, elle y est pervenue et s'est lancée dans une grande aventure: explorer l'île céleste.",
+            'image': 'heroes/Gladys.png'
+        },
+        'Ophidia': {
+            'name': 'Ophidia',
+            'class': 'Nécromancien',
+            'base_power': 135,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': 'Celui qui croise sa beauté asphyxiante périra après une terrible agonie.',
+            'image': 'Heroes/Ophidia.webp'
+        },
+        'Melias': {
+            'name': 'Melias',
+            'class': 'Maître Méca',
+            'base_power': 125,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Melias Bright rêvait de voler dans le ciel depuis sa plus tendre enfance et elle a construit un planeur alors qu'elle n'avait que neuf ans. Aujourd'hui experte dans les jetpacks, elle rêve d'emmener tout le monde dans le ciel.",
+            'image': 'Heroes/Melias.png'
+        },
+        'Fenris': {
+            'name': 'Fenris',
+            'class': 'Voleur',
+            'base_power': 140,
+            'cost': 4000,
+            'rarity': 'rare',
+            'description': "Paria warg du nord glacial, Fenris mène ses frères loups dans sa quête de vengeance et lutte pour leur survie.",
+            'image': 'Heroes/Fenris.webp'
+        },
+        
+        # Héros épiques (prix haut)
+        'Tiadrin': {
+            'name': 'Tiadrin',
+            'class': 'Paladin',
+            'base_power': 1,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Tiadrin est autant critiquée qu'encensée pour son éradication inconditionnelle zélée de toute forme de ténèbres. dans son esprit, malgré tout, la lumière ne peut pas faillir.",
+            'image': 'Heroes/Tiadrin_portrait.webp'
+        },
+        'Pallas': {
+            'name': 'Pallas',
+            'class': 'Voleur',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Autrefois, pallas a perdu un bras au combat. Après avoir obsorbé l'énergie d'un météore gravitationnel extraterrestre, il s'est changé en seigneur noir et parcourt désormais sans relâche les territoires frontaliers.",
+            'image': 'Heroes/Pallas.png'
+        },
+        'Tisiphone': {
+            'name': 'Tisiphone',
+            'class': 'Nécromancien',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "La légendaire reine dragon Tisiphone avait été il y a bien longtemps le lien entre les dragons et les humains, mais elle avait ensuite plongé dans un profond sommeil. Quand les humains ont attaqué la tanière d'un dragon, la colère de celui-ci a été si vive qu'il a réveillé Tisiphone. Blessée et folle de rage, elle a juré de se venger des cupides humains.",
+            'image': 'Heroes/Tisiphone.png'
+        },
+        'Eyreon': {
+            'name': 'Eyreon',
+            'class': 'Mage',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Eyreon descend d'une pure lignée elfique. Il s'est fait connaître comme guérisseur spécialisé dans les maladies du sang. Quand la corruption gagna la forêt, il ne pu résister à la tentation et transforma ses confrères en cobayes.",
+            'image': 'Heroes/Eyreon.png'
+        },
+        'Kaleido': {
+            'name': 'Kaleido',
+            'class': 'Général',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Errant entre le royaume des vivants et le pays des morts, ce nécromancien manipule les âmes à sa guise.",
+            'image': 'Heroes/Kaleido.png'
+        },
+        'Solaris': {
+            'name': 'Solaris',
+            'class': 'Gladiateur',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Solaris a vu sa famille se faire emporter par un démon quand il était petit. Pour se venger, il a dû en devenir un. Après avoir taillé son ennemi en pièces membre par membre, il a fait de sa colonne vertébrale une arme et de son crâne un masque. Depuis lors, il passe son temps à chasser des démons.",
+            'image': 'Heroes/Solaris.png'
+        },
+        'Salomon': {
+            'name': 'Salomon',
+            'class': 'Gladiateur',
+            'base_power': 180,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Une tribu légendaire dont les ancêtres étaient la progéniture illégitime de la divinité. Salomon s'est hissé à la tête de ce peuple ancien, et la plupart de ses actions sont aujourd'hui dirigées contre les étrangers qui convoitent les pouvoirs inhabituels de la tribu.",
+            'image': 'Heroes/salomon.png'
+        },
+        'Saizo': {
+            'name': 'Saizo',
+            'class': 'Voleur',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Saizo, le plus doué des disciples, s'est vu confier de grandes responsabilités par les anciens. C'est à lui de former les Nekoma et leurs alliés naturels, les Rakan, aux art complexes du subterfuge et de la furtivité.",
+            'image': 'Heroes/Saizo.webp'
+        },
+        'Florani': {
+            'name': 'Florani',
+            'class': 'Sage',
+            'base_power': 140,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Depuis le plus jeune âge, Florani se sent à l'aise parmi les oiseaux. Elle comprend le pouvoir de la protection et du bannissement. C'est à la fois la gardienne de la vie et l'augure du chaos.",
+            'image': 'Heroes/Florani.png'
+        },
+        'Myra': {
+            'name': 'Myra',
+            'class': 'Maître Méca',
+            'base_power': 125,
+            'cost': 8000,
+            'rarity': 'epic',
+            'description': "Elle a réussi à intégrer le conseil de Nore grâce à sa victoire écrasante lors du championnat de Nore, alors armée de sa toute dernière création mécanique.",
+            'image': 'Heroes/Myra.jpeg'
+        },
+        # Héros légendaires (prix max)
+        'Lee': {
+            'name': 'Lee',
+            'class': 'Gladiateur',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Lee est un boxeur qui est parti de chez lui pour s'entraîner. Grâce à la bénédiction de ses ancêtres, il s'est changé en panda dont les coups sont mus par la foudre et le tonnerre du dragon divin.",
+            'image': 'Heroes/Lee.png'
+        },
+        'Drac': {
+            'name': 'Drac',
+            'class': 'Voleur',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "En raison du culte qu'elle voue aux dragons, la ville natale de Drac a été isolée et l'hostilité a fini par se transformer en attaques. Cependant, le destin a conduit Drac à secourir un dragon et à bénéficier des conseils de Tisiphone. Avec le dragon, Drac s'est lancé dans une expédition de vengeance.",
+            'image': 'Heroes/Drach.png'
+        },
+        
+        'Baelrog': {
+            'name': 'Baelrog',
+            'class': 'Gladiateur',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Les grands jotuns, inconnus du reste du monde, règnent sur les pics glacés de Nore tels des demi-dieux. cependant, le grand chasseur Baelrog ne recule devant rien. Il a une nouvelle proie en vue.",
+            'image': 'Heroes/Baelrog.webp'
+        },
+        'Marlena': {
+            'name': 'Marlena',
+            'class': 'Paladin',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "La prêtresse marlena, la soeur qui a surmonté les difficultés et s'est entraînée férocement pour aider les blessés sur le champ de bataille.",
+            'image': 'Heroes/Marlena.png'
+        },
+        'Cyrus': {
+            'name': 'Cyrus',
+            'class': 'Général',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Un roi du désert, invaincu en terme de stratégie et de combat, défenseur du domaine contre les menaces et l'érosion.",
+            'image': 'Heroes/Cyrus.png'
+        },
+        'Vallari': {
+            'name': 'Vallari',
+            'class': 'Mage',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Née avec la capacité de contrôler le feu, Vallari fut rejetée par ses parents et vendue à un magicien noir. Ayant échappé à son ravisseur, elle se bat désormais pour défendre les faibles.",
+            'image': 'Heroes/Drach.png'
+        },
+        'Yip': {
+            'name': 'Yip',
+            'class': 'Sage',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Le maître de la lame Raken originel, maître Yip est à la fois un instructeur talentueux et un apprenti astucieux. Après de nombreux siècles à perfectionner ses techniques élémentaires, il ne fait désormais plus qu'un avec le vent. Il a même choisi de poser son épée, pour adopter l'air lui-même comme nouvelle lame.",
+            'image': 'Heroes/Yip.webp'
+        },
+        'Gazul': {
+            'name': 'Gazul',
+            'class': 'Nécromancien',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Certains prétendent que Gazul fut un jour roi, tandis que d'autres avancent qu'il aurait été un magicien noir. Gazul lui-même ne s'en souvient pas, son âme ayant été consumée par le vide.",
+            'image': 'Heroes/Gazul.webp'
+        },
+        'Jacques': {
+            'name': 'Jacques',
+            'class': 'Maître Méca',
+            'base_power': 180,
+            'cost': 16000,
+            'rarity': 'legendary',
+            'description': "Jacques s'engagea sur un coup de tête pour exhiber se combinaison mécanique. Sa passion pour le bricolage frise l'hystérie, mais c'est précisément cette ferveur qui alimente la puissance de l'armée naine.",
+            'image': 'Jacques_portrait.webp'
+        },
+        
+    }
+}
+
+# Raretés des héros
+HERO_RARITIES = {
+    'starter': {'color': 0x808080, 'name': 'Débutant'},
+    'common': {'color': 0xFFFFFF, 'name': 'Commun'},
+    'rare': {'color': 0x0080FF, 'name': 'Rare'},
+    'epic': {'color': 0x8000FF, 'name': 'Épique'},
+    'legendary': {'color': 0xFF8000, 'name': 'Légendaire'},
+}
+
+# Configuration du bot
+intents = discord.Intents.default()
+intents.message_content = True
+bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
+
+# Base de données des joueurs
+players_data = {}
+
+def load_player_data():
+    """Charge les données des joueurs"""
+    global players_data
+    try:
+        if os.path.exists('players.json'):
+            with open('players.json', 'r', encoding='utf-8') as f:
+                players_data = json.load(f)
+    except Exception as e:
+        print(f"Erreur lors du chargement: {e}")
+        players_data = {}
+
+def save_player_data():
+    """Sauvegarde les données des joueurs"""
+    try:
+        with open('players.json', 'w', encoding='utf-8') as f:
+            json.dump(players_data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde: {e}")
+
+def get_player(user_id):
+    """Récupère ou crée un joueur"""
+    user_id = str(user_id)
+    if user_id not in players_data:
+        players_data[user_id] = {
+            'coins': 1000,
+            'heroes': {},
+            'starter_choice_made': False,
+            'starter_heroes_unlocked': []
+        }
+        save_player_data()
+    return players_data[user_id]
+
+def create_hero_instance(hero_id, hero_data):
+    """Crée une instance d'un héros"""
+    class_info = HERO_CLASSES[hero_data['class']]
+    
+    return {
+        'id': hero_id,
+        'name': hero_data['name'],
+        'class': hero_data['class'],
+        'base_power': hero_data['base_power'],
+        'rarity': hero_data['rarity'],
+        'description': hero_data['description'],
+        'image': hero_data['image'],
+        'equipment': {slot: None for slot in class_info['equipment_slots']},
+        'total_power': hero_data['base_power'],
+        'level': 1
+    }
+
+def calculate_hero_power(hero):
+    """Calcule la puissance totale d'un héros"""
+    total_power = hero['base_power']
+    for slot, equipment in hero['equipment'].items():
+        if equipment:
+            total_power += equipment.get('power', 0)
+    return total_power
+
+def get_all_heroes():
+    """Retourne tous les héros disponibles"""
+    all_heroes = {}
+    all_heroes.update(HEROES_DATABASE['starter_heroes'])
+    all_heroes.update(HEROES_DATABASE['shop_heroes'])
+    return all_heroes
+
+@bot.event
+async def on_ready():
+    print(f'{bot.user} est paré !')
+    load_player_data()
+
+@bot.command(name='start')
+async def start_game(ctx):
+    """Démarre le jeu avec le choix du héros de départ"""
+    player = get_player(ctx.author.id)
+    
+    if player['starter_choice_made']:
+        await ctx.send("Tu as déjà fait ton choix de départ ! Utilise `!heroes` pour voir tes héros.")
+        return
+    
+    starter_heroes = HEROES_DATABASE['starter_heroes']
+    
+    embed = discord.Embed(
+        title="🎮 Bienvenue dans l'Arène des Héros !",
+        description="Choisis ton premier héros parmi ces trois champions !\n*Les deux autres te seront offerts après ton choix.*",
+        color=0x00FF00
+    )
+    
+    hero_list = ""
+    for i, (hero_id, hero_data) in enumerate(starter_heroes.items(), 1):
+        class_info = HERO_CLASSES[hero_data['class']]
+        hero_list += f"{i}. {class_info['emoji']} **{hero_data['name']}** ({hero_data['class'].title()})\n"
+        hero_list += f"   Puissance: {hero_data['base_power']} - {hero_data['description']}\n\n"
+    
+    embed.add_field(name="Héros de départ disponibles", value=hero_list, inline=False)
+    embed.set_footer(text="Utilise !choose <numéro> pour faire ton choix")
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name='choose')
+async def choose_starter_hero(ctx, choice: int = None):
+    """Choisit le héros de départ"""
+    if choice is None:
+        await ctx.send("Tu dois spécifier un numéro ! Exemple: `!choose 1`")
+        return
+    
+    player = get_player(ctx.author.id)
+    
+    if player['starter_choice_made']:
+        await ctx.send("Tu as déjà fait ton choix de départ !")
+        return
+    
+    starter_heroes = list(HEROES_DATABASE['starter_heroes'].items())
+    if choice < 1 or choice > len(starter_heroes):
+        await ctx.send(f"Choix invalide ! Choisis entre 1 et {len(starter_heroes)}.")
+        return
+    
+    # Ajouter le héros choisi en premier
+    chosen_hero_id, chosen_hero_data = starter_heroes[choice - 1]
+    player['heroes'][chosen_hero_id] = create_hero_instance(chosen_hero_id, chosen_hero_data)
+    player['starter_heroes_unlocked'].append(chosen_hero_id)
+    
+    # Ajouter les deux autres héros gratuitement
+    for hero_id, hero_data in starter_heroes:
+        if hero_id != chosen_hero_id:
+            player['heroes'][hero_id] = create_hero_instance(hero_id, hero_data)
+            player['starter_heroes_unlocked'].append(hero_id)
+    
+    player['starter_choice_made'] = True
+    save_player_data()
+    
+    class_info = HERO_CLASSES[chosen_hero_data['class']]
+    
+    embed = discord.Embed(
+        title="🎉 Choix confirmé !",
+        description=f"Tu as choisi **{chosen_hero_data['name']}** comme héros principal !",
+        color=class_info['color']
+    )
+    
+    embed.add_field(
+        name=f"{class_info['emoji']} {chosen_hero_data['class'].title()}",
+        value=f"Puissance: {chosen_hero_data['base_power']}\n{chosen_hero_data['description']}",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="🎁 Bonus de départ",
+        value="Les deux autres héros de départ ont été ajoutés à ta collection !",
+        inline=False
+    )
+    
+    embed.add_field(
+        name="Emplacements d'équipement",
+        value=f"• {chr(10).join(class_info['equipment_slots'])}",
+        inline=True
+    )
+    
+    embed.set_footer(text="Utilise !heroes pour voir tous tes héros ou !profile pour ton profil")
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name='heroes', aliases=['héros', 'h'])
+async def show_heroes(ctx):
+    """Affiche tous les héros du joueur"""
+    player = get_player(ctx.author.id)
+    
+    if not player['heroes']:
+        await ctx.send("Tu n'as pas encore de héros ! Utilise `!start` pour commencer.")
+        return
+    
+    embed = discord.Embed(
+        title=f"🦸‍♂️ Héros de {ctx.author.display_name}",
+        color=0x0099FF
+    )
+    
+    for hero_id, hero in player['heroes'].items():
+        class_info = HERO_CLASSES[hero['class']]
+        rarity_info = HERO_RARITIES[hero['rarity']]
+                
+        hero_info = f"{class_info['emoji']} **{hero['class'].title()}** {status}\n"
+        hero_info += f"Puissance: {calculate_hero_power(hero)} | Niveau: {hero['level']}\n"
+        hero_info += f"Rareté: {rarity_info['name']}\n"
+        hero_info += f"*{hero['description']}*"
+        
+        embed.add_field(
+            name=hero['name'],
+            value=hero_info,
+            inline=True
+        )
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name='profile', aliases=['p'])
+async def show_profile(ctx):
+    """Affiche le profil du joueur"""
+    player = get_player(ctx.author.id)
+    
+    if not player['active_hero']:
+        await ctx.send("Tu n'as pas de héros actif ! Utilise `!start` pour commencer.")
+        return
+    
+    hero = player['heroes'][player['active_hero']]
+    class_info = HERO_CLASSES[hero['class']]
+    
+    embed = discord.Embed(
+        title=f"📊 Profil de {ctx.author.display_name}",
+        color=class_info['color']
+    )
+    
+    embed.add_field(name="Pièces", value=f"{player['coins']} 🪙", inline=True)
+    embed.add_field(name="Héros possédés", value=f"{len(player['heroes'])}", inline=True)
+    embed.add_field(name="‎", value="‎", inline=True)  # Spacer
+    
+    embed.add_field(
+        name=f"{class_info['emoji']} Héros actif: {hero['name']}",
+        value=f"**{hero['class'].title()}** - Niveau {hero['level']}\nPuissance totale: **{calculate_hero_power(hero)}**",
+        inline=False
+    )
+    
+    # Équipement
+    equipment_text = ""
+    for slot in class_info['equipment_slots']:
+        equipment = hero['equipment'][slot]
+        if equipment:
+            equipment_text += f"**{slot.title()}**: {equipment['name']} (+{equipment['power']})\n"
+        else:
+            equipment_text += f"**{slot.title()}**: *Vide*\n"
+    
+    embed.add_field(name="Équipement", value=equipment_text, inline=False)
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name='shutdown')
+@commands.is_owner()
+async def sdown(ctx):
+    """Arrête le bot (réservé au propriétaire)"""
+    try:
+        # Sauvegarde finale des données
+        save_player_data()
+        
+        embed = discord.Embed(
+            title="🔴 Arrêt du bot",
+            description="Sauvegarde en cours et arrêt du bot...",
+            color=0xFF0000
+        )
+        
+        await ctx.send(embed=embed)
+        
+        print("Bot en cours d'arrêt...")
+        await bot.close()
+        
+    except Exception as e:
+        await ctx.send(f"Erreur lors de l'arrêt : {e}")
+        print(f"Erreur shutdown: {e}")
+
+@bot.command(name='classes')
+async def show_classes(ctx):
+    """Affiche toutes les classes disponibles"""
+    embed = discord.Embed(
+        title="⚔️ Classes de Héros",
+        description="Voici toutes les classes disponibles dans le jeu",
+        color=0x00FF00
+    )
+    
+    for class_name, class_info in HERO_CLASSES.items():
+        equipment_list = "• " + "\n• ".join(class_info['equipment_slots'])
+        
+        embed.add_field(
+            name=f"{class_info['emoji']} {class_name.title()}",
+            value=f"{class_info['description']}\n\n**Équipements:**\n{equipment_list}",
+            inline=True
+        )
+    
+    await ctx.send(embed=embed)
+
+@bot.command(name='aide', aliases=['help'])
+async def show_help(ctx):
+    """Affiche l'aide du jeu"""
+    embed = discord.Embed(
+        title="🎮 Aide - Système de Héros",
+        description="Guide des commandes disponibles",
+        color=0x00FF00
+    )
+    
+    commands_text = """
+    `!start` - Commencer l'aventure et choisir un héros
+    `!choose <numéro>` - Choisir ton héros de départ
+    `!heroes` ou `!h` - Voir tous tes héros
+    `!profile` ou `!p` - Afficher ton profil
+    `!classes` - Voir toutes les classes
+    `!help` - Afficher cette aide
+    """
+    
+    embed.add_field(name="Commandes", value=commands_text, inline=False)
+    
+    embed.add_field(
+        name="Classes disponibles",
+        value="Gladiateur, Général, Sage, Mage, Nécromancien, Paladin, Voleur, Maître Méca",
+        inline=False
+    )
+    
+    await ctx.send(embed=embed)
+
+# Gestion d'erreurs
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("Commande inconnue ! Utilise `!help` pour voir les commandes disponibles.")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Il manque des arguments à ta commande ! Utilise `!help` pour plus d'infos.")
+    else:
+        print(f"Erreur: {error}")
+
+TOKEN = 'MTM4Mzg5ODU4OTc2NzQwNTYwMA.G3HsgH.kCrGD7nFupiu14iCU0o15KqgsHNxtp_LiDMHis'
+bot.run('MTM4Mzg5ODU4OTc2NzQwNTYwMA.G3HsgH.kCrGD7nFupiu14iCU0o15KqgsHNxtp_LiDMHis')

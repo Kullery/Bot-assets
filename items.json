@@ -1,0 +1,14 @@
+{
+  "id": 1,
+  "name": "Hache en fer",
+  "rarity": "Commun",
+  "compatible_classes": ["GLADIATEUR", "VOLEUR", "GENERAL", "MAITRE MECA"],
+  "slot": "épée",
+  "price": 150,
+  "image": "Equipements/1-Common/Hache en fer.webp",
+  "stats": {
+    "attaque": 12,
+    "vitesse": 2
+  },
+  "description": "Une lame affûtée, équilibrée pour le combat rapproché."
+}
