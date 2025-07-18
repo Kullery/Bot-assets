@@ -81,14 +81,14 @@ class EquipSlot(Enum):
     
 # Définition des emplacements d'équipement par classe
 EQUIPMENT_SLOTS_BY_CLASS = {
-    HeroClass.Gladiateur: ["épée", "épée", "casque", "armure", "babiole", "babiole"],
-    HeroClass.Mage: ["sceptre", "cape", "casque", "robe", "babiole", "robe"],
-    HeroClass.Voleur: ["épée", "arc", "casque", "armure", "babiole", "babiole"],
-    HeroClass.Paladin: ["épée", "bouclier", "casque", "armure", "babiole", "babiole"],
-    HeroClass.Sage: ["sceptre", "livre", "casque", "robe", "babiole", "babiole"],
-    HeroClass.Général: ["épée", "bannière", "casque", "armure", "babiole", "babiole"],
-    HeroClass.Nécromancien: ["sceptre", "cape", "casque", "robe", "livre", "babiole"],
-    HeroClass.Maître_Méca: ["épée", "épée", "casque", "armure", "babiole", "babiole"]
+    HeroClass.GLADIATEUR: ["épée", "épée", "casque", "armure", "babiole", "babiole"],
+    HeroClass.MAGE: ["sceptre", "cape", "casque", "robe", "babiole", "robe"],
+    HeroClass.VOLEUR: ["épée", "arc", "casque", "armure", "babiole", "babiole"],
+    HeroClass.PALADIN: ["épée", "bouclier", "casque", "armure", "babiole", "babiole"],
+    HeroClass.SAGE: ["sceptre", "livre", "casque", "robe", "babiole", "babiole"],
+    HeroClass.GENERAL: ["épée", "bannière", "casque", "armure", "babiole", "babiole"],
+    HeroClass.NECROMANCIEN: ["sceptre", "cape", "casque", "robe", "livre", "babiole"],
+    HeroClass.MAITRE_MECA: ["épée", "épée", "casque", "armure", "babiole", "babiole"]
 }
 
 
