@@ -57,27 +57,27 @@ class ItemRarity(Enum):
         return self._rank
 
 class HeroClass(Enum):
-    Gladiateur = "Gladiateur"
-    Mage = "Mage"
-    Voleur = "Voleur"
-    Paladin = "Paladin"
-    Sage = "Sage"
-    Général = "Général"
-    Nécromancien = "Nécromancien"
-    Maître_Méca = "Maître Méca"
+    GLADIATEUR = "Gladiateur"
+    MAGE = "Mage"
+    VOLEUR = "Voleur"
+    PALADIN = "Paladin"
+    SAGE = "Sage"
+    GENERAL = "Général"
+    NECROMANCIEN = "Nécromancien"
+    MAITRE_MECA = "Maître Méca"
 
 
 class EquipSlot(Enum):
-    Epée = "épée"
-    Casque = "casque"
-    Armure = "armure"
-    Cape = "cape"
-    Livre = "livre"
-    Sceptre = "sceptre"
-    Babiole = "babiole"
-    Robe = "robe"
-    Bouclier = "bouclier"
-    Arc = "arc"
+    EPEE = "épée"
+    CASQUE = "casque"
+    ARMURE = "armure"
+    CAPE = "cape"
+    LIVRE = "livre"
+    SCEPTRE = "sceptre"
+    BABIOLE = "babiole"
+    ROBE = "robe"
+    BOUCLIER = "bouclier"
+    ARC = "arc"
     
 # Définition des emplacements d'équipement par classe
 EQUIPMENT_SLOTS_BY_CLASS = {

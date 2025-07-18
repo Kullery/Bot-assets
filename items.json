@@ -1,7 +1,7 @@
 {
   "id": 1,
   "name": "Hache en fer",
-  "rarity": "Commun",
+  "rarity": "COMMUN",
   "compatible_classes": ["GLADIATEUR", "VOLEUR", "GENERAL", "MAITRE MECA"],
   "slot": "épée",
   "price": 150,
