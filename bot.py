@@ -34,10 +34,10 @@ class HeroRarity(Enum):
         return self._rank
 
 class ItemRarity(Enum):
-    COMMUN = ("gris", "⚪", 1,"Common")
+    COMMUN = ("gris", "⚪", 1,"Commun")
     RARE = ("bleu", "🔵", 2,"Rare")
-    EPIQUE = ("violet", "🟣", 3,"Epic")
-    LEGENDAIRE = ("or", "🟡", 4,"Legendary")
+    EPIQUE = ("violet", "🟣", 3,"Epique")
+    LEGENDAIRE = ("or", "🟡", 4,"Legendaire")
     MYTHIQUE = ("rose","🩷",5,"Mythique")
     DIVIN = ("rouge","🔴",6,"Divin")
     SUPREME = ("orange","🟠",7,"Suprême")
