@@ -497,4 +497,5 @@ async def help_command(ctx):
 
 # Remplace 'YOUR_BOT_TOKEN' par ton token Discord
 if __name__ == "__main__":
-    bot.run('MTM4Mzg5ODU4OTc2NzQwNTYwMA.GEHVPs.TmkB_mTRgJlvuIiPLAEo_uGDYYjWAcihcA_GQU')
+    token = os.getenv("DISCORD_TOKEN")
+    bot.run(token)
