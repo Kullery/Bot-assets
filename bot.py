@@ -8,6 +8,8 @@ from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Optional
 import os
 from dotenv import load_dotenv
+from discord.ui import View, Select, Button
+from datetime import datetime, timedelta
 load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
@@ -742,12 +744,10 @@ async def hero_details(ctx, hero_id: int):
     
     await ctx.send(embed=embed)
 
-from discord.ext import commands
-from discord.ui import View, Select, Button
-from datetime import datetime, timedelta
-import discord, random, json
+intents = discord.Intents.default()
+intents.message_content = True  # Nécessaire pour lire le contenu des messages (si tu utilises !commande)
 
-bot = commands.Bot(command_prefix="!")
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 ITEMS_DU_JOUR = []
 DERNIERE_MAJ_ITEMS = None
