@@ -1,0 +1,166 @@
+[
+  {
+    "name": "Coffre Commun",
+    "price": 100,
+    "rarity_distribution": {
+      "Commun": 80,
+      "Rare": 15,
+      "Epique": 5
+    },
+    "loot_amount": 3,
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/CoffreCommun.png",
+    "description": "Un coffre classique, pouvant contenir quelques objets et ressources."
+  },
+  {
+    "name": "Coffre Rare",
+    "price": 300,
+    "rarity_distribution": {
+      "Commun": 50,
+      "Rare": 33,
+      "Epique": 15,
+      "Légendaire": 2
+    },
+    "loot_amount": 4,
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/CoffreCommun.png",
+    "description": "Un coffre mystérieux aux reflets arcaniques."
+  },
+  {
+    "name": "Coffre Epique",
+    "price": 750,
+    "rarity_distribution": {
+      "Commun": 10,
+      "Rare": 50,
+      "Epique": 30,
+      "Légendaire": 10,
+      "Mythique": 2
+    },
+    "loot_amount": 6,
+    "image": "Chests/magic_chest.webp",
+    "description": "Un coffre mystérieux aux reflets arcaniques."
+  },
+  {
+    "name": "Coffre Légendaire",
+    "price": 1200,
+    "rarity_distribution": {
+      "Rare": 20,
+      "Epique": 30,
+      "Légendaire": 30,
+      "Mythique": 5
+    },
+    "loot_amount": 5,
+    "image": "Chests/legendary_chest.webp",
+    "description": "Un coffre légendaire, rempli de trésors inestimables."
+  },
+  {
+    "name": "Coffre Mythique",
+    "price": 2000,
+    "rarity_distribution": {
+      "Commun": 25,
+      "Rare": 25,
+      "Epique": 25,
+      "Légendaire": 25
+    },
+    "loot_amount": 4,
+    "image": "Chests/mystery_chest.webp",
+    "description": "Un coffre enveloppé de mystère, promettant des récompenses exceptionnelles."
+  },
+  {
+    "name": "Coffre Divin",
+    "price": 5000,
+    "rarity_distribution": {
+      "Divin": 90,
+      "Supreme": 10
+    },
+    "loot_amount": 1,
+    "image": "Chests/nature_chest.webp",
+    "description": "Un coffre orné de motifs naturels, rempli de trésors liés à la nature."
+  },
+  {
+    "name": "Coffre Ancien",
+    "rarity_distribution": {
+      "Commun": 15,
+      "Rare": 25,
+      "Epique": 35,
+      "Légendaire": 25
+    },
+    "loot_amount": 4,
+    "image": "Chests/ancient_chest.webp",
+    "description": "Un coffre ancien, chargé d'histoires et de trésors oubliés."
+  },
+  {
+    "name": "Coffre Légendaire",
+    "rarity_distribution": {
+      "Légendaire": 100
+    },
+    "loot_amount": 3,
+    "image": "Chests/legendary_chest.webp",
+    "description": "Un coffre légendaire, rempli de trésors inestimables."
+  },
+  {
+    "name": "Coffre de Donjon rare",
+    "rarity_distribution": {
+      "Epique": 60,
+      "Légendaire": 40
+    },
+    "loot_amount": 2,
+    "image": "Chests/mystery_chest.webp",
+    "description": "Un coffre enveloppé de mystère, promettant des récompenses exceptionnelles."
+  },
+  {
+    "name": "Coffre de Dragon d'or",
+    "rarity_distribution": {
+      "Commun": 50,
+      "Rare": 30,
+      "Epique": 20
+    },
+    "loot_amount": 2,
+    "image": "Chests/nature_chest.webp",
+    "description": "Un coffre orné de motifs naturels, rempli de trésors liés à la nature."
+  },
+  {
+    "name": "Coffre Ecaille de dragon",
+    "rarity_distribution": {
+      "Epique": 70,
+      "Légendaire": 30
+    },
+    "loot_amount": 3,
+    "image": "Chests/ancient_chest.webp",
+    "description": "Un coffre ancien, chargé d'histoires et de trésors oubliés."
+  },
+  {
+    "name": "Coffre Flamboyant",
+    "rarity_distribution": {
+      "Commun": 20,
+      "Rare": 30,
+      "Epique": 30,
+      "Légendaire": 20
+    },
+    "loot_amount": 4,
+    "image": "Chests/fortune_chest.webp",
+    "description": "Un coffre qui semble attirer la chance et la fortune."
+  },
+   {
+    "name": "Coffre de Source",
+    "rarity_distribution": {
+      "Commun": 20,
+      "Rare": 30,
+      "Epique": 30,
+      "Légendaire": 20
+    },
+    "loot_amount": 4,
+    "image": "Chests/fortune_chest.webp",
+    "description": "Un coffre qui semble attirer la chance et la fortune."
+  },
+   {
+    "name": "Coffre Flamboyant",
+    "rarity_distribution": {
+      "Commun": 20,
+      "Rare": 30,
+      "Epique": 30,
+      "Légendaire": 20
+    },
+    "loot_amount": 4,
+    "image": "Chests/fortune_chest.webp",
+    "description": "Un coffre qui semble attirer la chance et la fortune."
+  }
+]
