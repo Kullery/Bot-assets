@@ -753,7 +753,6 @@ DERNIERE_MAJ_ITEMS = None
 def maj_items_du_jour():
     global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
     if DERNIERE_MAJ_ITEMS is None or datetime.utcnow() - DERNIERE_MAJ_ITEMS > timedelta(hours=24):
-        ITEMS_DU_JOUR = random.sample(list(bot.items_db.values()), k=5)
         items_disponibles = list(bot.items_db.values())
         k = min(5, len(items_disponibles))  # Prend au maximum 5 ou le nombre d'items disponibles
         ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
