@@ -4,7 +4,7 @@ import asyncio
 import json
 import random
 from enum import Enum
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Optional
 import os
 from dotenv import load_dotenv
