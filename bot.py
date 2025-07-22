@@ -744,11 +744,6 @@ async def hero_details(ctx, hero_id: int):
     
     await ctx.send(embed=embed)
 
-intents = discord.Intents.default()
-intents.message_content = True  # Nécessaire pour lire le contenu des messages (si tu utilises !commande)
-
-bot = commands.Bot(command_prefix="!", intents=intents)
-
 ITEMS_DU_JOUR = []
 DERNIERE_MAJ_ITEMS = None
 
