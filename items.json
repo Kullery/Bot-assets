@@ -1,14 +1,30 @@
+[
 {
   "id": 1,
   "name": "Hache en fer",
   "rarity": "Commun",
   "compatible_classes": ["GLADIATEUR", "VOLEUR", "GENERAL", "MAITRE MECA"],
   "slot": "épée",
-  "price": 150,
-  "image": "Equipements/1-Common/Hache en fer.webp",
+  "price": 10,
+  "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Hache%20en%20fer.webp",
   "stats": {
     "attaque": 12,
     "vitesse": 2
   },
   "description": "Une lame affûtée, équilibrée pour le combat rapproché."
+},
+{
+  "id": 1,
+  "name": "Bâton magique",
+  "rarity": "Commun",
+  "compatible_classes": ["SAGE", "MAGE", "NECROMANCIEN"],
+  "slot": "sceptre",
+  "price": 10,
+  "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Bâton%20magique.webp",
+  "stats": {
+    "attaque": 12,
+    "vitesse": 2
+  },
+  "description": "Un bâton en bois imprégné d'une magie banale."
 }
+]

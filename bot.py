@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
-# Configuration des raretés
 class HeroRarity(Enum):
     COMMUN = ("vert", "🟢", 1, "Commun")
     RARE = ("bleu", "🔵", 2, "Rare")
@@ -139,16 +138,22 @@ class Item:
 @dataclass
 class PlayerData:
     user_id: int
-    gold: int = 1000  # or de départ
-    emblems: int = 0   # emblèmes de départ
+    gold: int = 1000
+    emblems: int = 0
     heroes: List[int] = None
     items: List[int] = None
+    chests: List[str] = None
+    hero_levels: Dict[int, 'HeroLevel'] = None  
 
     def __post_init__(self):
         if self.heroes is None:
             self.heroes = []
         if self.items is None:
             self.items = []
+        if self.chests is None:
+            self.chests = []
+        if self.hero_levels is None:
+            self.hero_levels = {}
 
 class HeroBot(commands.Bot):
     def __init__(self):
@@ -160,6 +165,7 @@ class HeroBot(commands.Bot):
         self.heroes_db: Dict[int, Hero] = {}
         self.items_db: Dict[int, Item] = {}
         self.players: Dict[int, PlayerData] = {}
+        self.chests_db: Dict[str, ChestType] = {}
         
         # Charger les données depuis des fichiers JSON
         self.load_data()
@@ -262,6 +268,24 @@ class HeroBot(commands.Bot):
             print("Fichier players.json non trouvé")
         except Exception as e:
             print(f"Erreur lors du chargement des joueurs: {e}")
+        
+        try:
+            with open('chests.json', 'r', encoding='utf-8') as f:
+                chests_data = json.load(f)
+                for chest_data in chests_data:
+                    chest = ChestType(
+                        name=chest_data['name'],
+                        rarity_distribution=chest_data['rarity_distribution'],
+                        loot_amount=chest_data['loot_amount'],
+                        image=chest_data['image'],
+                        description=chest_data['description'],
+                        price=chest_data.get('price', 300)  # Utilise le prix du JSON ou 300 par défaut
+                    )
+                    self.chests_db[chest.name] = chest
+        except FileNotFoundError:
+            print("Fichier chests.json non trouvé")
+        except Exception as e:
+            print(f"Erreur lors du chargement des coffres: {e}")
     
     def save_data(self):
         players_data = []
@@ -283,11 +307,31 @@ class HeroBot(commands.Bot):
             self.players[user_id] = PlayerData(user_id)
         return self.players[user_id]
     
-    def get_player(self, user_id: int) -> PlayerData:
-        """Récupère ou crée un joueur"""
-        if user_id not in self.players:
-            self.players[user_id] = PlayerData(user_id)
-        return self.players[user_id]
+    def generate_loot(self, chest: ChestType) -> LootResult:
+        loot = LootResult()
+        
+        # Génération des items selon la distribution
+        for _ in range(chest.loot_amount):
+            # Sélection de la rareté selon la distribution
+            rarities = list(chest.rarity_distribution.keys())
+            weights = list(chest.rarity_distribution.values())
+            selected_rarity = random.choices(rarities, weights=weights, k=1)[0]
+            
+            # Filtrer les items par rareté
+            try:
+                rarity_enum = ItemRarity[selected_rarity.upper()]
+                available_items = [item for item in self.items_db.values() if item.rarity == rarity_enum]
+                
+                if available_items:
+                    selected_item = random.choice(available_items)
+                    loot.items.append(selected_item.id)
+            except KeyError:
+                continue
+        
+        # Ajouter un peu d'or bonus
+        loot.gold = random.randint(50, 200)
+        
+        return loot
     
 @dataclass
 class ChestType:
@@ -296,7 +340,7 @@ class ChestType:
     loot_amount: int
     image: str
     description: str
-    price: int = 0  # Prix d'achat du coffre
+    price: int = 0
 
 @dataclass
 class LootResult:
@@ -762,50 +806,147 @@ class BoutiqueView(View):
     def __init__(self, user):
         super().__init__(timeout=120)
         self.user = user
-        self.add_item(BoutiqueDropdown(self))
+        self.current_page = "heros"  # Page par défaut
+        self.hero_index = 0  # Pour la pagination des héros
+        
+        # Boutons de navigation
+        self.add_item(NavigationButton("🦸 Héros", "heros"))
+        self.add_item(NavigationButton("🎁 Coffres", "coffres"))
+        self.add_item(NavigationButton("🛡️ Items du jour", "items"))
 
-class BoutiqueDropdown(Select):
-    def __init__(self, parent_view):
-        options = [
-            discord.SelectOption(label="🦸 Héros", value="heros"),
-            discord.SelectOption(label="🎁 Coffres", value="coffres"),
-            discord.SelectOption(label="🛡️ Items du jour", value="items")
-        ]
-        super().__init__(placeholder="Choisissez une catégorie", options=options)
-        self.parent_view = parent_view
+class NavigationButton(Button):
+    def __init__(self, label: str, page: str):
+        super().__init__(label=label, style=discord.ButtonStyle.secondary)
+        self.page = page
 
     async def callback(self, interaction: discord.Interaction):
-        if interaction.user != self.parent_view.user:
+        if interaction.user != self.view.user:
             return await interaction.response.send_message("❌ Ce menu n'est pas pour toi.", ephemeral=True)
 
-        maj_items_du_jour()
-        selection = self.values[0]
-
-        embed = discord.Embed(color=discord.Color.teal())
-        self.parent_view.clear_items()
-        self.parent_view.add_item(self)
-
-        if selection == "heros":
-            embed.title = "🦸 Héros disponibles"
-            for hero in bot.heroes_db.values():
-                embed.add_field(name=f"{hero.name}", value=f"Prix : {hero.price} 🏅", inline=False)
-                self.parent_view.add_item(AcheterHeroButton(hero))
-
-        elif selection == "coffres":
-            with open("chests.json", "r", encoding="utf-8") as f:
-                coffres = json.load(f)
-            embed.title = "🎁 Coffres disponibles"
-            for coffre in coffres:
-                embed.add_field(name=coffre["name"], value=f"Prix : 300 🪙", inline=False)
-                self.parent_view.add_item(AcheterCoffreButton(coffre))
-
-        elif selection == "items":
-            embed.title = "🛡️ Items du jour"
+        self.view.current_page = self.page
+        self.view.hero_index = 0  # Reset pagination
+        embed = await self.create_page_embed()
+        
+        # Mise à jour des boutons
+        self.view.clear_items()
+        self.view.add_item(NavigationButton("🦸 Héros", "heros"))
+        self.view.add_item(NavigationButton("🎁 Coffres", "coffres"))
+        self.view.add_item(NavigationButton("🛡️ Items du jour", "items"))
+        
+        # Ajouter les boutons spécifiques à la page
+        if self.page == "heros":
+            heroes_list = list(bot.heroes_db.values())
+            if len(heroes_list) > 1:
+                self.view.add_item(PaginationButton("⬅️", -1))
+                self.view.add_item(PaginationButton("➡️", 1))
+            if heroes_list:
+                current_hero = heroes_list[self.view.hero_index]
+                self.view.add_item(AcheterHeroButton(current_hero))
+        
+        elif self.page == "coffres":
+            for chest in bot.chests_db.values():
+                self.view.add_item(AcheterCoffreButton(chest))
+        
+        elif self.page == "items":
+            maj_items_du_jour()
             for item in ITEMS_DU_JOUR:
-                embed.add_field(name=item.name, value=f"{item.rarity.emoji} - {item.price} 🪙", inline=False)
-                self.parent_view.add_item(AcheterItemButton(item))
+                self.view.add_item(AcheterItemButton(item))
 
-        await interaction.response.edit_message(embed=embed, view=self.parent_view)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+    async def create_page_embed(self):
+        embed = discord.Embed(color=discord.Color.teal())
+        
+        if self.page == "heros":
+            embed.title = "🦸 Héros disponibles"
+            heroes_list = list(bot.heroes_db.values())
+            if heroes_list:
+                hero = heroes_list[self.view.hero_index]
+                embed.set_image(url=hero.image)
+                embed.add_field(name="Nom", value=hero.name, inline=True)
+                embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
+                embed.add_field(name="Prix", value=f"{hero.price} 🏅", inline=True)
+                embed.add_field(name="Rareté", value=f"{hero.rarity.emoji} {hero.rarity.display_name}", inline=True)
+                if hero.description:
+                    embed.add_field(name="Description", value=hero.description, inline=False)
+                embed.set_footer(text=f"Héros {self.view.hero_index + 1}/{len(heroes_list)}")
+        
+        elif self.page == "coffres":
+            embed.title = "🎁 Coffres disponibles"
+            for chest in bot.chests_db.values():
+                embed.add_field(
+                    name=f"📦 {chest.name}",
+                    value=f"Prix: {chest.price} 🪙\n{chest.description}",
+                    inline=False
+                )
+                # Pour l'image, on prend le premier coffre ou on peut faire une mosaïque
+                if hasattr(chest, 'image') and chest.image:
+                    embed.set_thumbnail(url=chest.image)
+        
+        elif self.page == "items":
+            embed.title = "🛡️ Items du jour"
+            maj_items_du_jour()
+            for item in ITEMS_DU_JOUR:
+                stats_str = ", ".join([f"{k}: +{v}" for k, v in item.stats.items()])
+                embed.add_field(
+                    name=f"{item.rarity.emoji} {item.name}",
+                    value=f"Prix: {item.price} 🪙\nStats: {stats_str}",
+                    inline=True
+                )
+        
+        return embed
+
+class PaginationButton(Button):
+    def __init__(self, emoji: str, direction: int):
+        super().__init__(emoji=emoji, style=discord.ButtonStyle.primary)
+        self.direction = direction
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user != self.view.user:
+            return await interaction.response.send_message("❌ Ce menu n'est pas pour toi.", ephemeral=True)
+
+        heroes_list = list(bot.heroes_db.values())
+        self.view.hero_index = (self.view.hero_index + self.direction) % len(heroes_list)
+        
+        # Recréer l'embed avec le nouveau héros
+        embed = discord.Embed(title="🦸 Héros disponibles", color=discord.Color.teal())
+        hero = heroes_list[self.view.hero_index]
+        embed.set_image(url=hero.image)
+        embed.add_field(name="Nom", value=hero.name, inline=True)
+        embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
+        embed.add_field(name="Prix", value=f"{hero.price} 🏅", inline=True)
+        embed.add_field(name="Rareté", value=f"{hero.rarity.emoji} {hero.rarity.display_name}", inline=True)
+        if hero.description:
+            embed.add_field(name="Description", value=hero.description, inline=False)
+        embed.set_footer(text=f"Héros {self.view.hero_index + 1}/{len(heroes_list)}")
+        
+        # Mettre à jour le bouton d'achat
+        for item in self.view.children:
+            if isinstance(item, AcheterHeroButton):
+                self.view.remove_item(item)
+                break
+        self.view.add_item(AcheterHeroButton(hero))
+        
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+class AcheterCoffreButton(Button):
+    def __init__(self, coffre):
+        super().__init__(label=f"Acheter {coffre.name} ({coffre.price}🪙)", style=discord.ButtonStyle.success)
+        self.coffre = coffre
+
+    async def callback(self, interaction: discord.Interaction):
+        player = bot.get_player(interaction.user.id)
+        if player.gold < self.coffre.price:
+            return await interaction.response.send_message(f"❌ Pas assez d'or. Il vous faut {self.coffre.price} 🪙.", ephemeral=True)
+
+        player.gold -= self.coffre.price
+        player.chests.append(self.coffre.name)
+        bot.save_data()
+        
+        await interaction.response.send_message(
+            f"✅ Coffre **{self.coffre.name}** acheté avec succès pour {self.coffre.price} 🪙!\nUtilisez `!ouvrir_coffre {self.coffre.name}` pour l'ouvrir.", 
+            ephemeral=True
+        )
 
 class AcheterHeroButton(Button):
     def __init__(self, hero):
@@ -877,12 +1018,32 @@ class AcheterItemButton(Button):
 @bot.command(name="boutique")
 async def boutique(ctx):
     maj_items_du_jour()
-    embed = discord.Embed(
-        title="🏪 Boutique",
-        description="Choisissez une catégorie dans le menu ci-dessous.",
-        color=discord.Color.teal()
-    )
-    await ctx.send(embed=embed, view=BoutiqueView(ctx.author))
+    view = BoutiqueView(ctx.author)
+    
+    # Créer l'embed initial (héros)
+    embed = discord.Embed(title="🦸 Héros disponibles", color=discord.Color.teal())
+    heroes_list = list(bot.heroes_db.values())
+    
+    if heroes_list:
+        hero = heroes_list[0]
+        embed.set_image(url=hero.image)
+        embed.add_field(name="Nom", value=hero.name, inline=True)
+        embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
+        embed.add_field(name="Prix", value=f"{hero.price} 🏅", inline=True)
+        embed.add_field(name="Rareté", value=f"{hero.rarity.emoji} {hero.rarity.display_name}", inline=True)
+        if hero.description:
+            embed.add_field(name="Description", value=hero.description, inline=False)
+        embed.set_footer(text=f"Héros 1/{len(heroes_list)}")
+        
+        # Ajouter les boutons de pagination et d'achat pour les héros
+        if len(heroes_list) > 1:
+            view.add_item(PaginationButton("⬅️", -1))
+            view.add_item(PaginationButton("➡️", 1))
+        view.add_item(AcheterHeroButton(hero))
+    else:
+        embed.description = "Aucun héros disponible"
+    
+    await ctx.send(embed=embed, view=view)
 
 
 @bot.command(name='aide')
