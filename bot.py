@@ -107,8 +107,6 @@ EQUIPMENT_SLOTS_BY_CLASS = {
     HeroClass.MAITRE_MECA: ["épée", "épée", "casque", "armure", "babiole", "babiole"]
 }
 
-
-
 @dataclass
 class Hero:
     id: int
@@ -154,6 +152,40 @@ class PlayerData:
             self.chests = []
         if self.hero_levels is None:
             self.hero_levels = {}
+
+@dataclass
+class ChestType:
+    name: str
+    rarity_distribution: Dict[str, int]
+    loot_amount: int
+    image: str
+    description: str
+    price: int = 0
+
+@dataclass
+class LootResult:
+    items: List[int] = field(default_factory=list)
+    gold: int = 0
+    triumph_emblems: int = 0
+
+@dataclass
+class HeroLevel:
+    level: int = 1
+    experience: int = 0
+    max_experience: int = 100
+    
+    def add_experience(self, amount: int) -> bool:
+        """Ajoute de l'expérience et retourne True si level up"""
+        self.experience += amount
+        leveled_up = False
+        
+        while self.experience >= self.max_experience:
+            self.experience -= self.max_experience
+            self.level += 1
+            self.max_experience = int(self.max_experience * 1.5)  # Augmente les requis d'XP
+            leveled_up = True
+        
+        return leveled_up    
 
 class HeroBot(commands.Bot):
     def __init__(self):
@@ -333,47 +365,13 @@ class HeroBot(commands.Bot):
         
         return loot
     
-@dataclass
-class ChestType:
-    name: str
-    rarity_distribution: Dict[str, int]
-    loot_amount: int
-    image: str
-    description: str
-    price: int = 0
-
-@dataclass
-class LootResult:
-    items: List[int] = field(default_factory=list)
-    gold: int = 0
-    triumph_emblems: int = 0
-
-@dataclass
-class HeroLevel:
-    level: int = 1
-    experience: int = 0
-    max_experience: int = 100
-    
-    def add_experience(self, amount: int) -> bool:
-        """Ajoute de l'expérience et retourne True si level up"""
-        self.experience += amount
-        leveled_up = False
-        
-        while self.experience >= self.max_experience:
-            self.experience -= self.max_experience
-            self.level += 1
-            self.max_experience = int(self.max_experience * 1.5)  # Augmente les requis d'XP
-            leveled_up = True
-        
-        return leveled_up    
-
 bot = HeroBot()
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} est connecté !')
 
-@bot.command(name='niveau_heros')
+@bot.command(name='lvl_heros')
 async def hero_level_info(ctx, hero_id: int = None):
     """Affiche les niveaux des héros"""
     player = bot.get_player(ctx.author.id)
@@ -436,7 +434,7 @@ async def hero_level_info(ctx, hero_id: int = None):
     
     await ctx.send(embed=embed)
 
-@bot.command(name='ouvrir_coffre')
+@bot.command(name='open')
 async def open_chest(ctx, *, chest_name: str):
     """Ouvre un coffre avec animation"""
     player = bot.get_player(ctx.author.id)
@@ -523,7 +521,7 @@ async def open_chest(ctx, *, chest_name: str):
     )
     await ctx.send(embed=embed)
 
-@bot.command(name='mes_coffres')
+@bot.command(name='chests')
 async def my_chests(ctx):
     """Affiche les coffres du joueur"""
     player = bot.get_player(ctx.author.id)
@@ -574,7 +572,7 @@ async def profile(ctx):
     
     await ctx.send(embed=embed)
 
-@bot.command(name='acheter')
+@bot.command(name='buy')
 async def buy(ctx, item_type: str, item_id: int):
     """Achète un héros ou un item"""
     player = bot.get_player(ctx.author.id)
@@ -630,7 +628,7 @@ async def buy(ctx, item_type: str, item_id: int):
     else:
         await ctx.send("❌ Type invalide. Utilisez `hero` ou `item`")
 
-@bot.command(name='mes_heroes')
+@bot.command(name='heros')
 async def my_heroes(ctx):
     """Affiche les héros du joueur"""
     player = bot.get_player(ctx.author.id)
@@ -656,7 +654,7 @@ async def my_heroes(ctx):
     
     await ctx.send(embed=embed)
 
-@bot.command(name='mes_items')
+@bot.command(name='items')
 async def my_items(ctx):
     """Affiche les items du joueur"""
     player = bot.get_player(ctx.author.id)
@@ -683,7 +681,7 @@ async def my_items(ctx):
     
     await ctx.send(embed=embed)
 
-@bot.command(name='équiper')
+@bot.command(name='equip')
 async def equip_item(ctx, hero_id: int, item_id: int):
     """Équipe un item sur un héros"""
     player = bot.get_player(ctx.author.id)
@@ -726,7 +724,7 @@ async def equip_item(ctx, hero_id: int, item_id: int):
     )
     await ctx.send(embed=embed)
 
-@bot.command(name='déséquiper')
+@bot.command(name='unequip')
 async def unequip_item(ctx, hero_id: int, item_id: int):
     """Déséquipe un item d'un héros"""
     player = bot.get_player(ctx.author.id)
@@ -753,7 +751,7 @@ async def unequip_item(ctx, hero_id: int, item_id: int):
     )
     await ctx.send(embed=embed)
 
-@bot.command(name='détails')
+@bot.command(name='info')
 async def hero_details(ctx, hero_id: int):
     """Affiche les détails d'un héros"""
     player = bot.get_player(ctx.author.id)
@@ -790,9 +788,6 @@ async def hero_details(ctx, hero_id: int):
 
 ITEMS_DU_JOUR = []
 DERNIERE_MAJ_ITEMS = None
-
-
-
 
 def maj_items_du_jour():
     global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
@@ -1015,8 +1010,8 @@ class AcheterItemButton(Button):
         bot.save_data()
         await interaction.response.send_message(f"✅ Tu as acheté **{self.item.name}**.", ephemeral=True)
 
-@bot.command(name="boutique")
-async def boutique(ctx):
+@bot.command(name="shop")
+async def shop(ctx):
     maj_items_du_jour()
     view = BoutiqueView(ctx.author)
     
@@ -1046,7 +1041,7 @@ async def boutique(ctx):
     await ctx.send(embed=embed, view=view)
 
 
-@bot.command(name='aide')
+@bot.command(name='help')
 async def help_command(ctx):
     """Affiche l'aide"""
     embed = discord.Embed(
@@ -1056,13 +1051,15 @@ async def help_command(ctx):
     
     commands_list = [
         "`!profil` - Affiche votre profil",
-        "`!boutique` - Affiche la boutique",
-        "`!mes_heroes` - Affiche vos héros",
-        "`!mes_items` - Affiche vos items",
-        "`!équiper <hero_id> <item_id>` - Équipe un item",
-        "`!déséquiper <hero_id> <item_id>` - Déséquipe un item",
-        "`!détails <hero_id>` - Détails d'un héros"
-    ]
+        "`!shop` - Affiche la boutique",
+        "`!buy <item>` - Acheter un item/coffre/héros" 
+        "`!heros` - Affiche vos héros",
+        "`!items` - Affiche vos items",
+        "`!equip <hero_id> <item_id>` - Équipe un item",
+        "`!unequip <hero_id> <item_id>` - Déséquipe un item",
+        "`!info <hero_id>` - Détails d'un héros",
+        "`!open <nom du coffre>` - Ouvrir un coffre spécifique",   
+        ]
     
     embed.add_field(
         name="Commandes disponibles",
