@@ -6,7 +6,7 @@
   "compatible_classes": ["GLADIATEUR", "VOLEUR", "GENERAL", "MAITRE MECA"],
   "slot": "épée",
   "price": 10,
-  "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Hache%20en%20fer.webp",
+  "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Hache_en_fer.webp",
   "stats": {
     "attaque": 12,
     "vitesse": 2
@@ -20,7 +20,7 @@
   "compatible_classes": ["SAGE", "MAGE", "NECROMANCIEN"],
   "slot": "sceptre",
   "price": 10,
-  "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Bâton%20magique.webp",
+  "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Baton_magique.webp",
   "stats": {
     "attaque": 12,
     "vitesse": 2
