@@ -3,7 +3,7 @@
   "id": 1,
   "name": "Hache en fer",
   "rarity": "Commun",
-  "compatible_classes": ["GLADIATEUR", "VOLEUR", "GENERAL", "MAITRE MECA"],
+  "compatible_classes": ["GLADIATEUR", "VOLEUR", "GENERAL", "MAITRE_MECA"],
   "slot": "épée",
   "price": 10,
   "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Equipements/1-Common/Hache_en_fer.webp",

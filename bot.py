@@ -1041,7 +1041,7 @@ async def shop(ctx):
     await ctx.send(embed=embed, view=view)
 
 
-@bot.command(name='help')
+@bot.command(name='aide')
 async def help_command(ctx):
     """Affiche l'aide"""
     embed = discord.Embed(
