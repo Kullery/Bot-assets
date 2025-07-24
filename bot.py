@@ -800,7 +800,7 @@ def maj_items_du_jour():
     global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
     if DERNIERE_MAJ_ITEMS is None or datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS > timedelta(hours=24):
         items_disponibles = list(bot.items_db.values())
-        k = min(5, len(items_disponibles))  # Prend au maximum 5 ou le nombre d'items disponibles
+        k = min(5, len(items_disponibles))
         ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
         DERNIERE_MAJ_ITEMS = datetime.now(timezone.utc)
 
@@ -808,43 +808,33 @@ class BoutiqueView(View):
     def __init__(self, user):
         super().__init__(timeout=120)
         self.user = user
-        self.current_page = "heros"  # Page par défaut
-        self.hero_index = 0  # Pour la pagination des héros
+        self.current_page = "heros"
+        self.hero_index = 0
         self.chest_index = 0
-        
-        # Boutons de navigation
-        self.add_item(NavigationButton("🦸 Héros", "heros"))
-        self.add_item(NavigationButton("🎁 Coffres", "coffres"))
-        self.add_item(NavigationButton("🛡️ Items du jour", "items"))
+        self.refresh_buttons()
 
     def refresh_buttons(self):
         self.clear_items()
-
-        # Boutons d’onglets
         self.add_item(NavigationButton("🦸 Héros", "heros"))
         self.add_item(NavigationButton("🎁 Coffres", "coffres"))
         self.add_item(NavigationButton("🛡️ Items du jour", "items"))
 
-        # Pagination selon la page active
-        if self.current_page == "heros":
-            if len(bot.heroes_db) > 1:
-                self.add_item(PaginationButton("⬅️", -1, "heros"))
-                self.add_item(PaginationButton("➡️", 1, "heros"))
-        elif self.current_page == "coffres":
-            if len(bot.chests_db) > 1:
-                self.add_item(PaginationButton("⬅️", -1, "coffres"))
-                self.add_item(PaginationButton("➡️", 1, "coffres"))
-    
+        if self.current_page == "heros" and len(bot.heroes_db) > 1:
+            self.add_item(PaginationButton("⬅️", -1, "heros"))
+            self.add_item(PaginationButton("➡️", 1, "heros"))
+        elif self.current_page == "coffres" and len(bot.chests_db) > 1:
+            self.add_item(PaginationButton("⬅️", -1, "coffres"))
+            self.add_item(PaginationButton("➡️", 1, "coffres"))
+
     async def create_page_embed(self):
         embed = discord.Embed(color=discord.Color.teal())
-        
-        if self.page == "heros":
+
+        if self.current_page == "heros":
             embed.title = "🦸 Héros disponibles"
             heroes_list = list(bot.heroes_db.values())
             if heroes_list:
-                # Assurer que l'index reste dans les limites
-                self.view.hero_index = min(self.view.hero_index, len(heroes_list) - 1)
-                hero = heroes_list[self.view.hero_index]
+                self.hero_index = min(self.hero_index, len(heroes_list) - 1)
+                hero = heroes_list[self.hero_index]
                 embed.set_image(url=hero.image)
                 embed.add_field(name="Nom", value=hero.name, inline=True)
                 embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
@@ -852,14 +842,14 @@ class BoutiqueView(View):
                 embed.add_field(name="Rareté", value=f"{hero.rarity.emoji} {hero.rarity.display_name}", inline=True)
                 if hero.description:
                     embed.add_field(name="Description", value=hero.description, inline=False)
-                embed.set_footer(text=f"Héros {self.view.hero_index + 1}/{len(heroes_list)}")
-        
-        elif self.page == "coffres":
+                embed.set_footer(text=f"Héros {self.hero_index + 1}/{len(heroes_list)}")
+
+        elif self.current_page == "coffres":
             embed.title = "🎁 Coffres disponibles"
             chests_list = list(bot.chests_db.values())
             if chests_list:
-                self.view.chest_index = min(self.view.chest_index, len(chests_list) - 1)
-                chest = chests_list[self.view.chest_index]
+                self.chest_index = min(self.chest_index, len(chests_list) - 1)
+                chest = chests_list[self.chest_index]
                 embed.add_field(
                     name=f"📦 {chest.name}",
                     value=f"Prix: {chest.price} 🪙\n{chest.description}",
@@ -867,9 +857,9 @@ class BoutiqueView(View):
                 )
                 if hasattr(chest, 'image') and chest.image:
                     embed.set_thumbnail(url=chest.image)
-                embed.set_footer(text=f"Coffre {self.view.chest_index + 1}/{len(chests_list)}")
-        
-        elif self.page == "items":
+                embed.set_footer(text=f"Coffre {self.chest_index + 1}/{len(chests_list)}")
+
+        elif self.current_page == "items":
             embed.title = "🛡️ Items du jour"
             maj_items_du_jour()
             for item in ITEMS_DU_JOUR:
@@ -879,7 +869,7 @@ class BoutiqueView(View):
                     value=f"Prix: {item.price} 🪙\nStats: {stats_str}",
                     inline=True
                 )
-        
+
         return embed
 
 class NavigationButton(Button):
@@ -892,34 +882,17 @@ class NavigationButton(Button):
             return await interaction.response.send_message("❌ Ce menu n'est pas pour toi.", ephemeral=True)
 
         self.view.current_page = self.page
-        self.view.hero_index = 0  # Reset pagination
+        self.view.hero_index = 0
         self.view.chest_index = 0
-        embed = await self.view.create_page_embed()
-        
         self.view.refresh_buttons()
-        
-        # Ajouter les boutons spécifiques à la page
-        if self.page == "heros":
-            heroes_list = list(bot.heroes_db.values())
-            if len(heroes_list) > 1:
-                self.view.add_item(PaginationButton("⬅️", -1))
-                self.view.add_item(PaginationButton("➡️", 1))
-            if heroes_list:
-                current_hero = heroes_list[self.view.hero_index]
-        elif self.page == "coffres":
-            chests_list = list(bot.chests_db.values())
-            if len(chests_list) > 1:
-                self.view.add_item(PaginationButton("⬅️", -1, "coffres"))
-                self.view.add_item(PaginationButton("➡️", 1, "coffres"))
-        elif self.page == "items":
-            maj_items_du_jour()
+        embed = await self.view.create_page_embed()
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 class PaginationButton(Button):
-    def __init__(self, emoji: str, direction: int, target_page: str = "heros"):
+    def __init__(self, emoji: str, direction: int, target_page: str):
         super().__init__(emoji=emoji, style=discord.ButtonStyle.primary)
         self.direction = direction
-        self.target_page = target_page  # soit "heros" soit "coffres"
+        self.target_page = target_page
 
     async def callback(self, interaction: discord.Interaction):
         if interaction.user != self.view.user:
@@ -928,41 +901,19 @@ class PaginationButton(Button):
         if self.target_page == "heros":
             heroes_list = list(bot.heroes_db.values())
             self.view.hero_index = (self.view.hero_index + self.direction) % len(heroes_list)
-
         elif self.target_page == "coffres":
             chests_list = list(bot.chests_db.values())
             self.view.chest_index = (self.view.chest_index + self.direction) % len(chests_list)
 
-        embed = await NavigationButton.create_page_embed(self.view)
+        self.view.refresh_buttons()
+        embed = await self.view.create_page_embed()
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 @bot.command(name="shop")
 async def shop(ctx):
     maj_items_du_jour()
     view = BoutiqueView(ctx.author)
-    
-    # Créer l'embed initial (héros)
-    embed = discord.Embed(title="🦸 Héros disponibles", color=discord.Color.teal())
-    heroes_list = list(bot.heroes_db.values())
-    
-    if heroes_list:
-        hero = heroes_list[0]
-        embed.set_image(url=hero.image)
-        embed.add_field(name="Nom", value=hero.name, inline=True)
-        embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
-        embed.add_field(name="Prix", value=f"{hero.price} 🏅", inline=True)
-        embed.add_field(name="Rareté", value=f"{hero.rarity.emoji} {hero.rarity.display_name}", inline=True)
-        if hero.description:
-            embed.add_field(name="Description", value=hero.description, inline=False)
-        embed.set_footer(text=f"Héros 1/{len(heroes_list)}")
-        
-        # Ajouter les boutons de pagination et d'achat pour les héros
-        if len(heroes_list) > 1:
-            view.add_item(PaginationButton("⬅️", -1, "heros"))
-            view.add_item(PaginationButton("➡️", 1, "heros"))
-    else:
-        embed.description = "Aucun héros disponible"
-    
+    embed = await view.create_page_embed()
     await ctx.send(embed=embed, view=view)
 
 @bot.command(name='aide')
