@@ -843,12 +843,8 @@ class NavigationButton(Button):
                 self.view.add_item(PaginationButton("➡️", 1))
             if heroes_list:
                 current_hero = heroes_list[self.view.hero_index]
-                self.view.add_item(AcheterHeroButton(current_hero))
         elif self.page == "items":
             maj_items_du_jour()
-            for item in ITEMS_DU_JOUR:
-                self.view.add_item(AcheterItemButton(item))
-
         await interaction.response.edit_message(embed=embed, view=self.view)
 
     async def create_page_embed(self):
@@ -918,82 +914,6 @@ class PaginationButton(Button):
         if hero.description:
             embed.add_field(name="Description", value=hero.description, inline=False)
         embed.set_footer(text=f"Héros {self.view.hero_index + 1}/{len(heroes_list)}")
-        
-        # Mettre à jour le bouton d'achat
-        for item in self.view.children:
-            if isinstance(item, AcheterHeroButton):
-                self.view.remove_item(item)
-                break
-        self.view.add_item(AcheterHeroButton(hero))
-        
-        await interaction.response.edit_message(embed=embed, view=self.view)
-
-class AcheterHeroButton(Button):
-    def __init__(self, hero):
-        super().__init__(label=f"Acheter {hero.name}", style=discord.ButtonStyle.primary)
-        self.hero = hero
-
-    async def callback(self, interaction: discord.Interaction):
-        player = bot.get_player(interaction.user.id)
-        if player.emblems < self.hero.price:
-            return await interaction.response.send_message("❌ Pas assez d'emblèmes.", ephemeral=True)
-        if self.hero.id in player.heroes:
-            return await interaction.response.send_message("❌ Tu possèdes déjà ce héros.", ephemeral=True)
-
-        player.emblems -= self.hero.price
-        player.heroes.append(self.hero.id)
-        bot.save_data()
-        await interaction.response.send_message(f"✅ {self.hero.name} acheté avec succès !", ephemeral=True)
-
-class AcheterCoffreButton(Button):
-    def __init__(self, coffre):
-        super().__init__(label=f"Acheter {coffre.name}", style=discord.ButtonStyle.success)        
-        self.coffre = coffre
-
-    async def callback(self, interaction: discord.Interaction):
-        player = bot.get_player(interaction.user.id)
-        if player.gold < 300:
-            return await interaction.response.send_message("❌ Pas assez d'or.", ephemeral=True)
-
-        player.gold -= 300
-        distribution = self.coffre["rarity_distribution"]
-        total = sum(distribution.values())
-        rarities = list(distribution.keys())
-        weights = list(distribution.values())
-
-        def filter_items_by_rarity(rarity_name):
-            try:
-                rarity_enum = ItemRarity[rarity_name.upper()]
-                return [item for item in bot.items_db.values() if item.rarity == rarity_enum]
-            except KeyError:
-                return []
-
-        items_gagnes = []
-        for _ in range(self.coffre["loot_amount"]):
-            rarity = random.choices(rarities, weights=weights, k=1)[0]
-            candidats = filter_items_by_rarity(rarity)
-            if candidats:
-                item = random.choice(candidats)
-                player.items.append(item.id)
-                items_gagnes.append(item)
-
-        bot.save_data()
-        await interaction.response.send_message(f"🎉 Tu as obtenu : {', '.join([i.name for i in items_gagnes])}", ephemeral=True)
-
-class AcheterItemButton(Button):
-    def __init__(self, item):
-        super().__init__(label=f"Acheter {item.name}", style=discord.ButtonStyle.secondary)
-        self.item = item
-
-    async def callback(self, interaction: discord.Interaction):
-        player = bot.get_player(interaction.user.id)
-        if player.gold < self.item.price:
-            return await interaction.response.send_message("❌ Pas assez d'or.", ephemeral=True)
-
-        player.gold -= self.item.price
-        player.items.append(self.item.id)
-        bot.save_data()
-        await interaction.response.send_message(f"✅ Tu as acheté **{self.item.name}**.", ephemeral=True)
 
 @bot.command(name="shop")
 async def shop(ctx):
@@ -1019,7 +939,6 @@ async def shop(ctx):
         if len(heroes_list) > 1:
             view.add_item(PaginationButton("⬅️", -1))
             view.add_item(PaginationButton("➡️", 1))
-        view.add_item(AcheterHeroButton(hero))
     else:
         embed.description = "Aucun héros disponible"
     
