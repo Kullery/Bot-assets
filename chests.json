@@ -104,7 +104,7 @@
     "loot_amount": 2,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_de_Dragon_d'or.png",
     "description": "Un coffre contenant une pièce de l'ensemble Dragon d'or.",
-    "color": "#ffdc00"
+    "color": "#f90fef"
   },
   {
     "name": "Coffre Ecaille de dragon",
@@ -115,7 +115,7 @@
     "loot_amount": 3,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Ecaille_de_dragon.png",
     "description": "Un coffre contenant une pièce de l'ensemble Ecaille de dragon.",
-    "color": "#00dcff"
+    "color": "#f90fef"
   },
    {
     "name": "Coffre de Source",
@@ -128,7 +128,7 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_de_Source.png",
     "description": "Un coffre contenant une pièce de l'ensemble Plume de source.",
-    "color": "#1fca31"
+    "color": "#f90fef"
   },
    {
     "name": "Coffre Flamboyant",

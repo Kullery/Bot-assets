@@ -315,6 +315,7 @@ class HeroBot(commands.Bot):
             print("Fichier chests.json non trouvé")
         except Exception as e:
             print(f"Erreur lors du chargement des coffres: {e}")
+        charger_items_du_jour()
     
     def save_data(self):
         players_data = []
@@ -329,6 +330,7 @@ class HeroBot(commands.Bot):
         
         with open('players.json', 'w', encoding='utf-8') as f:
             json.dump(players_data, f, indent=2, ensure_ascii=False)
+        sauvegarder_items_du_jour()
     
     def get_player(self, user_id: int) -> PlayerData:
         """Récupère ou crée un joueur"""
@@ -793,13 +795,74 @@ async def hero_details(ctx, hero_id: int):
 ITEMS_DU_JOUR = []
 DERNIERE_MAJ_ITEMS = None
 
+def charger_items_du_jour():
+    """Charge les items du jour depuis le fichier JSON"""
+    global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
+    try:
+        with open('items_du_jour.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+            # Charger les IDs des items et les convertir en objets Item
+            item_ids = data.get('items_du_jour', [])
+            ITEMS_DU_JOUR = []
+            for item_id in item_ids:
+                if item_id in bot.items_db:
+                    ITEMS_DU_JOUR.append(bot.items_db[item_id])
+            
+            # Charger la date de dernière mise à jour
+            derniere_maj_str = data.get('derniere_maj')
+            if derniere_maj_str:
+                DERNIERE_MAJ_ITEMS = datetime.fromisoformat(derniere_maj_str)
+            else:
+                DERNIERE_MAJ_ITEMS = None
+                
+    except FileNotFoundError:
+        print("Fichier items_du_jour.json non trouvé, création d'un nouveau fichier")
+        ITEMS_DU_JOUR = []
+        DERNIERE_MAJ_ITEMS = None
+        sauvegarder_items_du_jour()
+    except Exception as e:
+        print(f"Erreur lors du chargement des items du jour: {e}")
+        ITEMS_DU_JOUR = []
+        DERNIERE_MAJ_ITEMS = None
+
+def sauvegarder_items_du_jour():
+    """Sauvegarde les items du jour dans le fichier JSON"""
+    try:
+        # Convertir les objets Item en IDs pour la sauvegarde
+        item_ids = [item.id for item in ITEMS_DU_JOUR]
+        
+        # Convertir la date en string ISO format
+        derniere_maj_str = DERNIERE_MAJ_ITEMS.isoformat() if DERNIERE_MAJ_ITEMS else None
+        
+        data = {
+            'items_du_jour': item_ids,
+            'derniere_maj': derniere_maj_str
+        }
+        
+        with open('items_du_jour.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde des items du jour: {e}")
+
 def maj_items_du_jour():
     global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
-    if DERNIERE_MAJ_ITEMS is None or datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS > timedelta(hours=24):
+    
+    # Vérifier si une mise à jour est nécessaire
+    maintenant = datetime.now(timezone.utc)
+    
+    if DERNIERE_MAJ_ITEMS is None or maintenant - DERNIERE_MAJ_ITEMS > timedelta(hours=24):
+        print("Mise à jour des items du jour...")
+        
         items_disponibles = list(bot.items_db.values())
         k = min(5, len(items_disponibles))
         ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
-        DERNIERE_MAJ_ITEMS = datetime.now(timezone.utc)
+        DERNIERE_MAJ_ITEMS = maintenant
+        
+        # Sauvegarder les nouveaux items
+        sauvegarder_items_du_jour()
+        print(f"Nouveaux items du jour sélectionnés: {[item.name for item in ITEMS_DU_JOUR]}")
 
 class BoutiqueView(View):
     def __init__(self, user):
