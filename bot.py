@@ -182,6 +182,61 @@ class HeroLevel:
         
         return leveled_up    
 
+ITEMS_DU_JOUR = []
+DERNIERE_MAJ_ITEMS = None
+ITEMS_DU_JOUR_PATH = "items_du_jour.json"
+
+def sauvegarder_items_du_jour():
+    """Sauvegarde les items du jour dans le fichier JSON"""
+    try:
+        # Convertir les objets Item en IDs pour la sauvegarde
+        item_ids = [item.id for item in ITEMS_DU_JOUR]
+        
+        # Convertir la date en string ISO format
+        derniere_maj_str = DERNIERE_MAJ_ITEMS.isoformat() if DERNIERE_MAJ_ITEMS else None
+        
+        data = {
+            'items_du_jour': item_ids,
+            'derniere_maj': derniere_maj_str
+        }
+        
+        with open('items_du_jour.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            
+    except Exception as e:
+        print(f"Erreur lors de la sauvegarde des items du jour: {e}")
+
+def maj_items_du_jour():
+    global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
+
+    # Si le fichier existe, on le lit
+    if os.path.exists(ITEMS_DU_JOUR_PATH):
+        with open(ITEMS_DU_JOUR_PATH, "r") as f:
+            data = json.load(f)
+
+        timestamp = data.get("derniere_maj")
+        if timestamp:
+            DERNIERE_MAJ_ITEMS = datetime.fromisoformat(timestamp)
+
+        # Si moins de 24h sont passées, on garde les mêmes items
+        if DERNIERE_MAJ_ITEMS and datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS < timedelta(hours=24):
+            item_ids = data.get("items_ids", [])
+            ITEMS_DU_JOUR = [bot.items_db[i] for i in item_ids if i in bot.items_db]
+            return  # ✅ Pas besoin de regénérer
+
+    # Sinon, on génère de nouveaux items
+    items_disponibles = list(bot.items_db.values())
+    k = min(5, len(items_disponibles))
+    ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
+    DERNIERE_MAJ_ITEMS = datetime.now(timezone.utc)
+
+    # Sauvegarde dans le fichier
+    with open(ITEMS_DU_JOUR_PATH, "w") as f:
+        json.dump({
+            "derniere_maj": DERNIERE_MAJ_ITEMS.isoformat(),
+            "items_ids": [item.id for item in ITEMS_DU_JOUR]
+        }, f, indent=2)
+
 class HeroBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -791,61 +846,6 @@ async def hero_details(ctx, hero_id: int):
         )
     
     await ctx.send(embed=embed)
-
-ITEMS_DU_JOUR = []
-DERNIERE_MAJ_ITEMS = None
-ITEMS_DU_JOUR_PATH = "items_du_jour.json"
-
-def sauvegarder_items_du_jour():
-    """Sauvegarde les items du jour dans le fichier JSON"""
-    try:
-        # Convertir les objets Item en IDs pour la sauvegarde
-        item_ids = [item.id for item in ITEMS_DU_JOUR]
-        
-        # Convertir la date en string ISO format
-        derniere_maj_str = DERNIERE_MAJ_ITEMS.isoformat() if DERNIERE_MAJ_ITEMS else None
-        
-        data = {
-            'items_du_jour': item_ids,
-            'derniere_maj': derniere_maj_str
-        }
-        
-        with open('items_du_jour.json', 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-            
-    except Exception as e:
-        print(f"Erreur lors de la sauvegarde des items du jour: {e}")
-
-def maj_items_du_jour():
-    global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
-
-    # Si le fichier existe, on le lit
-    if os.path.exists(ITEMS_DU_JOUR_PATH):
-        with open(ITEMS_DU_JOUR_PATH, "r") as f:
-            data = json.load(f)
-
-        timestamp = data.get("derniere_maj")
-        if timestamp:
-            DERNIERE_MAJ_ITEMS = datetime.fromisoformat(timestamp)
-
-        # Si moins de 24h sont passées, on garde les mêmes items
-        if DERNIERE_MAJ_ITEMS and datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS < timedelta(hours=24):
-            item_ids = data.get("items_ids", [])
-            ITEMS_DU_JOUR = [bot.items_db[i] for i in item_ids if i in bot.items_db]
-            return  # ✅ Pas besoin de regénérer
-
-    # Sinon, on génère de nouveaux items
-    items_disponibles = list(bot.items_db.values())
-    k = min(5, len(items_disponibles))
-    ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
-    DERNIERE_MAJ_ITEMS = datetime.now(timezone.utc)
-
-    # Sauvegarde dans le fichier
-    with open(ITEMS_DU_JOUR_PATH, "w") as f:
-        json.dump({
-            "derniere_maj": DERNIERE_MAJ_ITEMS.isoformat(),
-            "items_ids": [item.id for item in ITEMS_DU_JOUR]
-        }, f, indent=2)
 
 class BoutiqueView(View):
     def __init__(self, user):
