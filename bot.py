@@ -976,7 +976,7 @@ class PaginationButton(Button):
 
 @bot.command(name="shop")
 async def shop(ctx):
-    maj_items_du_jour()
+    maj_items_du_jour(bot)
     view = BoutiqueView(ctx.author)
     embed = await view.create_page_embed()
     await ctx.send(embed=embed, view=view)
