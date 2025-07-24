@@ -99,12 +99,40 @@ EQUIPMENT_SLOTS_BY_CLASS = {
     HeroClass.MAITRE_MECA: ["épée", "épée", "casque", "armure", "babiole", "babiole"]
 }
 
+#Puissance des héros et items par rareté
+PUISSANCE_HEROS = {
+    HeroRarity.COMMUN: 100,
+    HeroRarity.RARE: 200,
+    HeroRarity.EPIQUE: 300,
+    HeroRarity.LEGENDAIRE: 500
+}
+PUISSANCE_ITEM = {
+    ItemRarity.COMMUN: 20,
+    ItemRarity.RARE: 50,
+    ItemRarity.EPIQUE: 80,
+    ItemRarity.LEGENDAIRE: 100,
+    ItemRarity.MYTHIQUE: 120,
+    ItemRarity.SUPREME: 200
+}
+
 def get_color_from_hex(hex_color):
     """Convertit une couleur hex en discord.Color"""
     if hex_color.startswith('#'):
         hex_color = hex_color[1:]
     return discord.Color(int(hex_color, 16))
 
+@dataclass
+class Item:
+    id: int
+    name: str
+    rarity: ItemRarity
+    compatible_classes: List[HeroClass]
+    price: int
+    image: str
+    stats: Dict[str, int]
+    description: str = ""
+    def get_puissance(self) -> int:
+        return PUISSANCE_ITEM.get(self.rarity, 0)
 @dataclass
 class Hero:
     id: int
@@ -116,20 +144,17 @@ class Hero:
     description: str = ""
     equipped_items: List[int] = None
     color: str = "#5865F2"
+    def calculer_puissance(self, items_db: Dict[int, Item]) -> int:
+        puissance = PUISSANCE_HEROS.get(self.rarity, 0)
+        for item_id in self.equipped_items:
+            item = items_db.get(item_id)
+            if item:
+                puissance += PUISSANCE_ITEM.get(item.rarity, 0)
+        return puissance
     
     def __post_init__(self):
         if self.equipped_items is None:
             self.equipped_items = []
-@dataclass
-class Item:
-    id: int
-    name: str
-    rarity: ItemRarity
-    compatible_classes: List[HeroClass]
-    price: int
-    image: str
-    stats: Dict[str, int]
-    description: str = ""
 @dataclass
 class PlayerData:
     user_id: int
@@ -815,6 +840,8 @@ async def hero_details(ctx, hero_id: int):
     embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
     embed.add_field(name="Rareté", value=hero.rarity.name, inline=True)
     embed.add_field(name="Items équipés", value=f"{len(hero.equipped_items)}/6", inline=True)
+    puissance = hero.calculer_puissance(bot.items_db)
+    embed.add_field(name="Puissance", value=f"{puissance} ⚡", inline=False)
     
     if hero.equipped_items:
         items_list = []
