@@ -863,6 +863,8 @@ class NavigationButton(Button):
             embed.title = "🦸 Héros disponibles"
             heroes_list = list(bot.heroes_db.values())
             if heroes_list:
+                # Assurer que l'index reste dans les limites
+                self.view.hero_index = min(self.view.hero_index, len(heroes_list) - 1)
                 hero = heroes_list[self.view.hero_index]
                 embed.set_image(url=hero.image)
                 embed.add_field(name="Nom", value=hero.name, inline=True)
@@ -946,8 +948,7 @@ class AcheterCoffreButton(Button):
         bot.save_data()
         
         await interaction.response.send_message(
-            f"✅ Coffre **{self.coffre.name}** acheté avec succès pour {self.coffre.price} 🪙!\nUtilisez `!ouvrir_coffre {self.coffre.name}` pour l'ouvrir.", 
-            ephemeral=True
+            f"✅ Coffre **{self.coffre.name}** acheté avec succès pour {self.coffre.price} 🪙!\nUtilisez `!open {self.coffre.name}` pour l'ouvrir."            ephemeral=True
         )
 
 class AcheterHeroButton(Button):
@@ -969,7 +970,7 @@ class AcheterHeroButton(Button):
 
 class AcheterCoffreButton(Button):
     def __init__(self, coffre):
-        super().__init__(label=f"Acheter {coffre['name']}", style=discord.ButtonStyle.success)
+        super().__init__(label=f"Acheter {coffre.name}", style=discord.ButtonStyle.success)        
         self.coffre = coffre
 
     async def callback(self, interaction: discord.Interaction):
