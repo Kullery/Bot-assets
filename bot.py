@@ -28,15 +28,12 @@ class HeroRarity(Enum):
     @property
     def color(self):
         return self._color
-
     @property
     def emoji(self):
         return self._emoji
-
     @property
     def rank(self):
         return self._rank
-
     @property
     def display_name(self):
         return self._display_name
@@ -55,19 +52,15 @@ class ItemRarity(Enum):
         self._emoji = emoji
         self._rank = rank
         self._display_name = display_name
-
     @property
     def color(self):
         return self._color
-
     @property
     def emoji(self):
         return self._emoji
-
     @property
     def rank(self):
         return self._rank
-
     @property
     def display_name(self):
         return self._display_name
@@ -81,7 +74,6 @@ class HeroClass(Enum):
     GENERAL = "Général"
     NECROMANCIEN = "Nécromancien"
     MAITRE_MECA = "Maître Méca"
-
 
 class EquipSlot(Enum):
     EPEE = "épée"
@@ -121,7 +113,6 @@ class Hero:
     def __post_init__(self):
         if self.equipped_items is None:
             self.equipped_items = []
-
 @dataclass
 class Item:
     id: int
@@ -132,7 +123,6 @@ class Item:
     image: str
     stats: Dict[str, int]
     description: str = ""
-
 @dataclass
 class PlayerData:
     user_id: int
@@ -152,7 +142,6 @@ class PlayerData:
             self.chests = []
         if self.hero_levels is None:
             self.hero_levels = {}
-
 @dataclass
 class ChestType:
     name: str
@@ -161,13 +150,11 @@ class ChestType:
     image: str
     description: str
     price: int = 0
-
 @dataclass
 class LootResult:
     items: List[int] = field(default_factory=list)
     gold: int = 0
     emblems: int = 0
-
 @dataclass
 class HeroLevel:
     level: int = 1
@@ -311,7 +298,7 @@ class HeroBot(commands.Bot):
                         loot_amount=chest_data['loot_amount'],
                         image=chest_data['image'],
                         description=chest_data['description'],
-                        price=chest_data.get('price', 300)  # Utilise le prix du JSON ou 300 par défaut
+                        price=chest_data.get('price', 300)
                     )
                     self.chests_db[chest.name] = chest
         except FileNotFoundError:
@@ -441,13 +428,13 @@ async def open_chest(ctx, *, chest_name: str):
     
     # Vérifier si le joueur a ce coffre
     if chest_name not in player.chests:
-        await ctx.send("❌ Vous ne possédez pas ce coffre!")
+        await ctx.send("❌ Vous ne possédez pas ce coffre !")
         return
     
     # Trouver le coffre dans la base de données
     chest = bot.chests_db.get(chest_name)
     if not chest:
-        await ctx.send("❌ Coffre introuvable dans la base de données!")
+        await ctx.send("❌ Coffre introuvable dans la base de données !")
         return
     
     # Retirer le coffre de l'inventaire
@@ -515,7 +502,7 @@ async def open_chest(ctx, *, chest_name: str):
     await message.edit(embed=embed)
     
     embed = discord.Embed(
-        title="✅ Coffre acheté!",
+        title="✅ Coffre acheté !",
         description=f"Vous avez acheté **{chest.name}** pour {chest.price} 💰\nUtilisez `!ouvrir_coffre {chest.name}` pour l'ouvrir!",
         color=discord.Color.green()
     )
@@ -527,7 +514,7 @@ async def my_chests(ctx):
     player = bot.get_player(ctx.author.id)
     
     if not player.chests:
-        await ctx.send("❌ Vous n'avez aucun coffre!")
+        await ctx.send("❌ Vous n'avez aucun coffre !")
         return
     
     # Compter les coffres par type
@@ -586,17 +573,17 @@ async def buy(ctx, item_type: str, item_id: int):
     
     if item_type.lower() == "hero":
         if item_id not in bot.heroes_db:
-            await ctx.send("❌ Héros introuvable!")
+            await ctx.send("❌ Héros introuvable.")
             return
         
         hero = bot.heroes_db[item_id]
         
         if item_id in player.heroes:
-            await ctx.send("❌ Vous possédez déjà ce héros!")
+            await ctx.send("❌ Vous possédez déjà ce héros.")
             return
         
         if player.gold < hero.price:
-            await ctx.send(f"❌ Pas assez de pièces! Il vous faut {hero.price} pièces.")
+            await ctx.send(f"❌ Pas assez d'argent ! Il vous faut {hero.price} pièces.")
             return
         
         player.gold -= hero.price
@@ -612,13 +599,13 @@ async def buy(ctx, item_type: str, item_id: int):
     
     elif item_type.lower() == "item":
         if item_id not in bot.items_db:
-            await ctx.send("❌ Item introuvable!")
+            await ctx.send("❌ Item introuvable.")
             return
         
         item = bot.items_db[item_id]
         
         if player.gold < item.price:
-            await ctx.send(f"❌ Pas assez de pièces! Il vous faut {item.price} pièces.")
+            await ctx.send(f"❌ Pas assez d'argent ! Il vous faut {item.price} pièces.")
             return
         
         player.gold -= item.price
@@ -626,7 +613,7 @@ async def buy(ctx, item_type: str, item_id: int):
         bot.save_data()
         
         embed = discord.Embed(
-            title="✅ Achat réussi!",
+            title="✅ Achat réussi !",
             description=f"Vous avez acheté {item.rarity.emoji} **{item.name}** pour {item.price} 💰",
             color=discord.Color.green()
         )
@@ -641,7 +628,7 @@ async def my_heroes(ctx):
     player = bot.get_player(ctx.author.id)
     
     if not player.heroes:
-        await ctx.send("❌ Vous n'avez aucun héros!")
+        await ctx.send("❌ Vous n'avez aucun héros recruté pour le moment.")
         return
     
     embed = discord.Embed(
@@ -667,7 +654,7 @@ async def my_items(ctx):
     player = bot.get_player(ctx.author.id)
     
     if not player.items:
-        await ctx.send("❌ Vous n'avez aucun item!")
+        await ctx.send("❌ Vous n'avez aucun item pour le moment.")
         return
     
     embed = discord.Embed(
@@ -695,11 +682,11 @@ async def equip_item(ctx, hero_id: int, item_id: int):
     
     # Vérifications
     if hero_id not in player.heroes:
-        await ctx.send("❌ Vous ne possédez pas ce héros!")
+        await ctx.send("❌ Vous ne possédez pas ce héros.")
         return
     
     if item_id not in player.items:
-        await ctx.send("❌ Vous ne possédez pas cet item!")
+        await ctx.send("❌ Vous ne possédez pas cet item.")
         return
     
     hero = bot.heroes_db[hero_id]
@@ -707,17 +694,17 @@ async def equip_item(ctx, hero_id: int, item_id: int):
     
     # Vérifier la compatibilité de classe
     if hero.hero_class not in item.compatible_classes:
-        await ctx.send(f"❌ Cet item n'est pas compatible avec la classe {hero.hero_class.value}!")
+        await ctx.send(f"❌ Cet item n'est pas compatible avec la classe {hero.hero_class.value}.")
         return
     
     # Vérifier si l'item est déjà équipé
     if item_id in hero.equipped_items:
-        await ctx.send("❌ Cet item est déjà équipé sur ce héros!")
+        await ctx.send("❌ Cet item est déjà équipé sur ce héros.")
         return
     
     # Vérifier la limite d'équipement
     if len(hero.equipped_items) >= 6:
-        await ctx.send("❌ Ce héros a déjà 6 items équipés!")
+        await ctx.send("❌ Ce héros a déjà 6 items équipés.")
         return
     
     # Équiper l'item
@@ -725,7 +712,7 @@ async def equip_item(ctx, hero_id: int, item_id: int):
     bot.save_data()
     
     embed = discord.Embed(
-        title="✅ Item équipé!",
+        title="✅ Item équipé !",
         description=f"{item.rarity.emoji} **{item.name}** équipé sur {hero.rarity.emoji} **{hero.name}**",
         color=discord.Color.green()
     )
@@ -737,13 +724,13 @@ async def unequip_item(ctx, hero_id: int, item_id: int):
     player = bot.get_player(ctx.author.id)
     
     if hero_id not in player.heroes:
-        await ctx.send("❌ Vous ne possédez pas ce héros!")
+        await ctx.send("❌ Vous ne possédez pas ce héros.")
         return
     
     hero = bot.heroes_db[hero_id]
     
     if item_id not in hero.equipped_items:
-        await ctx.send("❌ Cet item n'est pas équipé sur ce héros!")
+        await ctx.send("❌ Cet item n'est pas équipé sur ce héros.")
         return
     
     # Déséquiper l'item
@@ -752,7 +739,7 @@ async def unequip_item(ctx, hero_id: int, item_id: int):
     
     item = bot.items_db[item_id]
     embed = discord.Embed(
-        title="✅ Item déséquipé!",
+        title="✅ Item déséquipé !",
         description=f"{item.rarity.emoji} **{item.name}** déséquipé de {hero.rarity.emoji} **{hero.name}**",
         color=discord.Color.green()
     )
