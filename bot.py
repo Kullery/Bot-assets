@@ -1000,6 +1000,37 @@ class PaginationButton(Button):
         embed = await self.view.create_page_embed()
         await interaction.response.edit_message(embed=embed, view=self.view)
 
+@bot.command(name="leaderboard")
+async def leaderboard(ctx):
+    ranking = []
+    for player in bot.players.values():
+        total_power = 0
+        for hero_id in player.heroes:
+            hero = bot.heroes_db.get(hero_id)
+            if hero:
+                total_power += hero.calculer_puissance(bot.items_db)
+        ranking.append((player.user_id, total_power))
+
+    ranking.sort(key=lambda x: x[1], reverse=True)
+    top = ranking[:10]
+
+    embed = discord.Embed(
+        title="🏆 Classement des joueurs par puissance 🏆",
+        color=discord.Color.gold()
+    )
+
+    if not top:
+        embed.description = "Aucun joueur enregistré."
+    else:
+        desc = ""
+        for rank, (user_id, power) in enumerate(top, start=1):
+            user = await bot.fetch_user(user_id)
+            username = user.name if user else f"Joueur {user_id}"
+            desc += f"**{rank}. {username}** — {power} ⚡\n"
+        embed.description = desc
+
+    await ctx.send(embed=embed)
+
 @bot.command(name="shop")
 async def shop(ctx):
     maj_items_du_jour(bot)
