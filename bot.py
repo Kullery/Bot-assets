@@ -821,16 +821,24 @@ async def unequip_item(ctx, hero_id: int, item_id: int):
     await ctx.send(embed=embed)
 
 @bot.command(name='info')
-async def hero_details(ctx, hero_id: int):
-    """Affiche les détails d'un héros"""
+async def hero_details(ctx, *, hero_name: str):
+    """Affiche les détails d'un héros possédé par le joueur, en utilisant son nom"""
     player = bot.get_player(ctx.author.id)
-    
-    if hero_id not in player.heroes:
-        await ctx.send("❌ Vous ne possédez pas ce héros.")
+
+    # Recherche d'un héros correspondant par nom (insensible à la casse)
+    hero_id = None
+    for pid in player.heroes:
+        hero = bot.heroes_db.get(pid)
+        if hero and hero.name.lower() == hero_name.lower():
+            hero_id = pid
+            break
+
+    if hero_id is None:
+        await ctx.send("❌ Vous ne possédez pas ce héros (vérifie l'orthographe).")
         return
-    
+
     hero = bot.heroes_db[hero_id]
-    
+
     embed = discord.Embed(
         title=f"{hero.rarity.emoji} {hero.name}",
         description=hero.description,
@@ -840,21 +848,17 @@ async def hero_details(ctx, hero_id: int):
     embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
     embed.add_field(name="Rareté", value=hero.rarity.name, inline=True)
     embed.add_field(name="Items équipés", value=f"{len(hero.equipped_items)}/6", inline=True)
+
     puissance = hero.calculer_puissance(bot.items_db)
     embed.add_field(name="Puissance", value=f"{puissance} ⚡", inline=False)
-    
+
     if hero.equipped_items:
         items_list = []
         for item_id in hero.equipped_items:
             item = bot.items_db[item_id]
             items_list.append(f"{item.rarity.emoji} {item.name}")
-        
-        embed.add_field(
-            name="Équipement",
-            value="\n".join(items_list),
-            inline=False
-        )
-    
+        embed.add_field(name="Équipement", value="\n".join(items_list), inline=False)
+
     await ctx.send(embed=embed)
 
 class BoutiqueView(View):
