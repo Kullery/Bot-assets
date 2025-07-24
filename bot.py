@@ -1012,9 +1012,9 @@ class PaginationButton(Button):
 
 @bot.command(name="shop")
 async def shop(ctx):
-    print("Héros dans heroes_db :")
+    print("Héros chargés :")
     for hero_id, hero in bot.heroes_db.items():
-        print(f"- {hero_id}: {hero.name}")
+        print(f"{hero_id} - {hero.name} - Prix : {hero.price}")
     maj_items_du_jour(bot)
     view = BoutiqueView(ctx.author)
     embed = await view.create_page_embed()
