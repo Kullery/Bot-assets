@@ -817,43 +817,24 @@ class BoutiqueView(View):
         self.add_item(NavigationButton("🎁 Coffres", "coffres"))
         self.add_item(NavigationButton("🛡️ Items du jour", "items"))
 
-class NavigationButton(Button):
-    def __init__(self, label: str, page: str):
-        super().__init__(label=label, style=discord.ButtonStyle.secondary)
-        self.page = page
+    def refresh_buttons(self):
+        self.clear_items()
 
-    async def callback(self, interaction: discord.Interaction):
-        if interaction.user != self.view.user:
-            return await interaction.response.send_message("❌ Ce menu n'est pas pour toi.", ephemeral=True)
+        # Boutons d’onglets
+        self.add_item(NavigationButton("🦸 Héros", "heros"))
+        self.add_item(NavigationButton("🎁 Coffres", "coffres"))
+        self.add_item(NavigationButton("🛡️ Items du jour", "items"))
 
-        self.view.current_page = self.page
-        self.view.hero_index = 0  # Reset pagination
-        self.view.chest_index = 0
-        embed = await self.create_page_embed()
-        
-        # Mise à jour des boutons
-        self.view.clear_items()
-        self.view.add_item(NavigationButton("🦸 Héros", "heros"))
-        self.view.add_item(NavigationButton("🎁 Coffres", "coffres"))
-        self.view.add_item(NavigationButton("🛡️ Items du jour", "items"))
-        
-        # Ajouter les boutons spécifiques à la page
-        if self.page == "heros":
-            heroes_list = list(bot.heroes_db.values())
-            if len(heroes_list) > 1:
-                self.view.add_item(PaginationButton("⬅️", -1))
-                self.view.add_item(PaginationButton("➡️", 1))
-            if heroes_list:
-                current_hero = heroes_list[self.view.hero_index]
-        elif self.page == "coffres":
-            chests_list = list(bot.chests_db.values())
-            if len(chests_list) > 1:
-                self.view.add_item(PaginationButton("⬅️", -1, "coffres"))
-                self.view.add_item(PaginationButton("➡️", 1, "coffres"))
-        elif self.page == "items":
-            maj_items_du_jour()
-        await interaction.response.edit_message(embed=embed, view=self.view)
-
+        # Pagination selon la page active
+        if self.current_page == "heros":
+            if len(bot.heroes_db) > 1:
+                self.add_item(PaginationButton("⬅️", -1, "heros"))
+                self.add_item(PaginationButton("➡️", 1, "heros"))
+        elif self.current_page == "coffres":
+            if len(bot.chests_db) > 1:
+                self.add_item(PaginationButton("⬅️", -1, "coffres"))
+                self.add_item(PaginationButton("➡️", 1, "coffres"))
+    
     async def create_page_embed(self):
         embed = discord.Embed(color=discord.Color.teal())
         
@@ -901,6 +882,39 @@ class NavigationButton(Button):
         
         return embed
 
+class NavigationButton(Button):
+    def __init__(self, label: str, page: str):
+        super().__init__(label=label, style=discord.ButtonStyle.secondary)
+        self.page = page
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user != self.view.user:
+            return await interaction.response.send_message("❌ Ce menu n'est pas pour toi.", ephemeral=True)
+
+        self.view.current_page = self.page
+        self.view.hero_index = 0  # Reset pagination
+        self.view.chest_index = 0
+        embed = await self.view.create_page_embed()
+        
+        self.view.refresh_buttons()
+        
+        # Ajouter les boutons spécifiques à la page
+        if self.page == "heros":
+            heroes_list = list(bot.heroes_db.values())
+            if len(heroes_list) > 1:
+                self.view.add_item(PaginationButton("⬅️", -1))
+                self.view.add_item(PaginationButton("➡️", 1))
+            if heroes_list:
+                current_hero = heroes_list[self.view.hero_index]
+        elif self.page == "coffres":
+            chests_list = list(bot.chests_db.values())
+            if len(chests_list) > 1:
+                self.view.add_item(PaginationButton("⬅️", -1, "coffres"))
+                self.view.add_item(PaginationButton("➡️", 1, "coffres"))
+        elif self.page == "items":
+            maj_items_du_jour()
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
 class PaginationButton(Button):
     def __init__(self, emoji: str, direction: int, target_page: str = "heros"):
         super().__init__(emoji=emoji, style=discord.ButtonStyle.primary)
@@ -919,7 +933,7 @@ class PaginationButton(Button):
             chests_list = list(bot.chests_db.values())
             self.view.chest_index = (self.view.chest_index + self.direction) % len(chests_list)
 
-        embed = await self.view.children[0].create_page_embed()
+        embed = await NavigationButton.create_page_embed(self.view)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 @bot.command(name="shop")
