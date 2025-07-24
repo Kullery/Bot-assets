@@ -10,7 +10,8 @@
     "loot_amount": 3,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Commun.png",
     "description": "Un coffre classique, pouvant contenir quelques objets et ressources.",
-    "color": "#28bf7c"
+    "color": "#28bf7c",
+      "hidden": false
   },
   {
     "name": "Coffre Rare",
@@ -24,7 +25,8 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Rare.png",
     "description": "Un coffre mystérieux aux reflets arcaniques.",
-    "color": "#07afe5"
+    "color": "#07afe5",
+      "hidden": false
   },
   {
     "name": "Coffre Epique",
@@ -39,7 +41,8 @@
     "loot_amount": 6,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Epique.png",
     "description": "Un coffre mystérieux aux reflets arcaniques.",
-    "color": "#a207e5"
+    "color": "#a207e5",
+      "hidden": false
   },
   {
     "name": "Coffre Légendaire",
@@ -53,7 +56,8 @@
     "loot_amount": 5,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Légendaire.png",
     "description": "Un coffre légendaire, rempli de trésors inestimables.",
-    "color": "#d6a00f"
+    "color": "#d6a00f",
+      "hidden": false
   },
   {
     "name": "Coffre Mythique",
@@ -67,7 +71,8 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Mythique.png",
     "description": "Un coffre enveloppé de mystère, promettant des récompenses exceptionnelles.",
-    "color": "#f81ed7"
+    "color": "#f81ed7",
+      "hidden": false
   },
   {
     "name": "Coffre Divin",
@@ -79,7 +84,8 @@
     "loot_amount": 1,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Divin.png",
     "description": "Le coffre ultime.",
-    "color": "#e60e00"
+    "color": "#e60e00",
+      "hidden": false
   },
   {
     "name": "Coffre de Donjon rare",
@@ -92,7 +98,8 @@
     "loot_amount": 5,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_de_Donjon_Rare.png",
     "description": "Un loot classique trouvable dans les donjons d'Adrenia.",
-    "color": "#25dcc0"
+    "color": "#25dcc0",
+      "hidden": false
   },
   {
     "name": "Coffre de Dragon d'or",
@@ -104,7 +111,8 @@
     "loot_amount": 2,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_de_Dragon_d'or.png",
     "description": "Un coffre contenant une pièce de l'ensemble Dragon d'or.",
-    "color": "#f90fef"
+    "color": "#f90fef",
+      "hidden": false
   },
   {
     "name": "Coffre Ecaille de dragon",
@@ -115,7 +123,8 @@
     "loot_amount": 3,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Ecaille_de_dragon.png",
     "description": "Un coffre contenant une pièce de l'ensemble Ecaille de dragon.",
-    "color": "#f90fef"
+    "color": "#f90fef",
+      "hidden": false
   },
    {
     "name": "Coffre de Source",
@@ -128,7 +137,8 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_de_Source.png",
     "description": "Un coffre contenant une pièce de l'ensemble Plume de source.",
-    "color": "#f90fef"
+    "color": "#f90fef",
+      "hidden": false
   },
    {
     "name": "Coffre Flamboyant",
@@ -141,7 +151,8 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Flamboyant.png",
     "description": "Un coffre contenant une pièce de l'ensemble Flamboyant.",
-    "color": "#f90fef"
+    "color": "#f90fef",
+      "hidden": false
   },
   {
     "name": "Coffre Garde-Ciel",
@@ -154,7 +165,8 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Garde-ciel.png",
     "description": "Un coffre contenant une pièce de l'ensemble Garde-Ciel.",
-    "color": "#f90fef"
+    "color": "#f90fef",
+      "hidden": false
   },
   {
     "name": "Coffre Magdragon",
@@ -167,6 +179,22 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Magdragon.png",
     "description": "Un coffre contenant une pièce de l'ensemble Magdragon.",
-    "color": "#f90fef"
+    "color": "#f90fef",
+      "hidden": false
+  },
+  {
+    "name": "Coffre Journalier",
+    "rarity_distribution": {
+      "Commun": 20,
+      "Rare": 40,
+      "Epique": 30,
+      "Légendaire": 7,
+      "Mythique": 3
+    },
+    "loot_amount": 4,
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Ecaille_de_dragon.png",
+    "description": "Un coffre contenant une pièce de l'ensemble Ecaille de dragon.",
+    "color": "#f90fef",
+    "hidden": true
   }
 ]

@@ -184,6 +184,7 @@ class ChestType:
     description: str
     price: int = 0
     color: str = "#5865F2"
+    hidden: bool = False
 @dataclass
 class LootResult:
     items: List[int] = field(default_factory=list)
@@ -376,7 +377,8 @@ class HeroBot(commands.Bot):
                         image=chest_data['image'],
                         description=chest_data['description'],
                         price=chest_data.get('price', 300),
-                        color=chest_data.get('color', '#5865F2')
+                        color=chest_data.get('color', '#5865F2'),
+                        hidden=chest_data.get('hidden', False)
                     )
                     self.chests_db[chest.name] = chest
         except FileNotFoundError:
@@ -875,9 +877,12 @@ class BoutiqueView(View):
         if self.current_page == "heros" and len(bot.heroes_db) > 1:
             self.add_item(PaginationButton("⬅️", -1, "heros"))
             self.add_item(PaginationButton("➡️", 1, "heros"))
-        elif self.current_page == "coffres" and len(bot.chests_db) > 1:
-            self.add_item(PaginationButton("⬅️", -1, "coffres"))
-            self.add_item(PaginationButton("➡️", 1, "coffres"))
+        elif self.current_page == "coffres":
+            # Compter seulement les coffres non cachés
+            visible_chests = [chest for chest in bot.chests_db.values() if not chest.hidden]
+            if len(visible_chests) > 1:
+                self.add_item(PaginationButton("⬅️", -1, "coffres"))
+                self.add_item(PaginationButton("➡️", 1, "coffres"))
 
     async def create_page_embed(self):
         if self.current_page == "heros":
@@ -908,12 +913,12 @@ class BoutiqueView(View):
                 )
 
         elif self.current_page == "coffres":
-            chests_list = list(bot.chests_db.values())
+            # Filtrer les coffres non cachés
+            chests_list = [chest for chest in bot.chests_db.values() if not chest.hidden]
             if chests_list:
                 self.chest_index = min(self.chest_index, len(chests_list) - 1)
                 chest = chests_list[self.chest_index]
                 
-                # Créez l'embed AVEC la couleur personnalisée du coffre
                 embed = discord.Embed(
                     title="🎁 Coffres disponibles",
                     color=get_color_from_hex(chest.color)
@@ -1046,27 +1051,61 @@ async def daily(ctx):
             await ctx.send(f"⏳ Tu dois encore attendre {remaining.days}j {hours}h {minutes}min avant de réclamer ton prochain coffre.")
             return
 
-    chest_name = "Coffre Journalier"  # Tu peux changer selon ta logique
+    chest_name = "Coffre Journalier"
     chest = bot.chests_db.get(chest_name)
 
     if not chest:
         await ctx.send("⚠️ Coffre journalier introuvable.")
         return
 
+    # Animation d'ouverture
+    embed = discord.Embed(
+        title="🎁 Récompense journalière !",
+        description="🔓 Récupération de votre coffre quotidien...",
+        color=get_color_from_hex(chest.color)
+    )
+    embed.set_thumbnail(url=chest.image)
+    
+    message = await ctx.send(embed=embed)
+    await asyncio.sleep(1.5)
+
+    # Générer et appliquer le loot
     loot = bot.generate_loot(chest)
     player.gold += loot.gold
+    player.emblems += loot.emblems
     player.items.extend(loot.items)
     player.last_daily_claim = now.isoformat()
 
     bot.save_data()
 
+    # Affichage des récompenses
     embed = discord.Embed(
         title="🎁 Coffre journalier ouvert !",
-        description=f"Tu as reçu **{loot.gold} or** et {len(loot.items)} objet(s) !",
-        color=int(chest.color.strip("#"), 16)
+        description=f"Contenu de votre **{chest.name}** :",
+        color=get_color_from_hex(chest.color)
     )
     embed.set_thumbnail(url=chest.image)
-    await ctx.send(embed=embed)
+    
+    if loot.gold > 0:
+        embed.add_field(name="💰 Pièces", value=f"+{loot.gold}", inline=True)
+    
+    if loot.emblems > 0:
+        embed.add_field(name="🏆 Emblèmes", value=f"+{loot.emblems}", inline=True)
+    
+    if loot.items:
+        items_text = []
+        for item_id in loot.items:
+            item = bot.items_db[item_id]
+            items_text.append(f"{item.rarity.emoji} {item.name}")
+        
+        embed.add_field(
+            name="🎒 Items obtenus",
+            value="\n".join(items_text),
+            inline=False
+        )
+    
+    embed.set_footer(text="Revenez demain pour votre prochaine récompense !")
+    await message.edit(embed=embed)
 
 @bot.command(name="shop")
 async def shop(ctx):
