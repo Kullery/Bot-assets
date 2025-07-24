@@ -10,7 +10,7 @@
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Avalon1.png"
   },
   {
-    "id": 1,
+    "id": 2,
     "name": "Nora",
     "rarity": "Commun",
     "hero_class": "Maître Méca",
@@ -20,7 +20,7 @@
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Nora1.png"
   },
   {
-    "id": 1,
+    "id": 3,
     "name": "Cléo",
     "rarity": "Commun",
     "hero_class": "Mage",
