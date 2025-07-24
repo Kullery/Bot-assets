@@ -10,7 +10,6 @@ import os
 from dotenv import load_dotenv
 from discord.ui import View, Select, Button
 from datetime import datetime, timedelta, timezone
-from typing import dict
 load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
