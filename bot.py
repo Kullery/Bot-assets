@@ -17,7 +17,7 @@ class HeroRarity(Enum):
     COMMUN = ("vert", "🟢", 1, "Commun")
     RARE = ("bleu", "🔵", 2, "Rare")
     EPIQUE = ("violet", "🟣", 3, "Epique")
-    LEGENDAIRE = ("or", "🟡", 4, "Légendaire")
+    LEGENDAIRE = ("or", "🟡", 4, "Legendaire")
 
     def __init__(self, color, emoji, rank, display_name):
         self._color = color
