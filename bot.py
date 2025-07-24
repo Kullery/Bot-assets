@@ -839,10 +839,15 @@ async def hero_details(ctx, *, hero_name: str):
 
     hero = bot.heroes_db[hero_id]
 
+    try:
+        couleur = int(hero.color.lstrip("#"), 16)
+    except AttributeError:
+        couleur = 0x3498db  # couleur par défaut si pas de champ 'color'
+
     embed = discord.Embed(
         title=f"{hero.rarity.emoji} {hero.name}",
         description=hero.description,
-        color=discord.Color.blue()
+        color=couleur
     )
     embed.set_image(url=hero.image)
     embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
