@@ -10,6 +10,7 @@ import os
 from dotenv import load_dotenv
 from discord.ui import View, Select, Button
 from datetime import datetime, timedelta, timezone
+from typing import dict
 load_dotenv("secrets.env")  # Charge les variables depuis secrets.env
 
 # Configuration des raretés
@@ -189,53 +190,43 @@ ITEMS_DU_JOUR_PATH = "items_du_jour.json"
 def sauvegarder_items_du_jour():
     """Sauvegarde les items du jour dans le fichier JSON"""
     try:
-        # Convertir les objets Item en IDs pour la sauvegarde
         item_ids = [item.id for item in ITEMS_DU_JOUR]
-        
-        # Convertir la date en string ISO format
         derniere_maj_str = DERNIERE_MAJ_ITEMS.isoformat() if DERNIERE_MAJ_ITEMS else None
-        
         data = {
-            'items_du_jour': item_ids,
+            'items_ids': item_ids,  # clé corrigée ici, c'était 'items_du_jour' dans ta version, mieux garder 'items_ids'
             'derniere_maj': derniere_maj_str
         }
-        
-        with open('items_du_jour.json', 'w', encoding='utf-8') as f:
+        with open(ITEMS_DU_JOUR_PATH, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-            
     except Exception as e:
         print(f"Erreur lors de la sauvegarde des items du jour: {e}")
 
-def maj_items_du_jour():
+def maj_items_du_jour(bot):
+    """Met à jour la liste des items du jour, en rechargeant depuis fichier ou générant"""
     global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
 
-    # Si le fichier existe, on le lit
     if os.path.exists(ITEMS_DU_JOUR_PATH):
-        with open(ITEMS_DU_JOUR_PATH, "r") as f:
-            data = json.load(f)
+        try:
+            with open(ITEMS_DU_JOUR_PATH, "r", encoding='utf-8') as f:
+                data = json.load(f)
 
-        timestamp = data.get("derniere_maj")
-        if timestamp:
-            DERNIERE_MAJ_ITEMS = datetime.fromisoformat(timestamp)
+            timestamp = data.get("derniere_maj")
+            if timestamp:
+                DERNIERE_MAJ_ITEMS = datetime.fromisoformat(timestamp)
 
-        # Si moins de 24h sont passées, on garde les mêmes items
-        if DERNIERE_MAJ_ITEMS and datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS < timedelta(hours=24):
-            item_ids = data.get("items_ids", [])
-            ITEMS_DU_JOUR = [bot.items_db[i] for i in item_ids if i in bot.items_db]
-            return  # ✅ Pas besoin de regénérer
+            if DERNIERE_MAJ_ITEMS and datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS < timedelta(hours=24):
+                item_ids = data.get("items_ids", [])
+                ITEMS_DU_JOUR = [bot.items_db[i] for i in item_ids if i in bot.items_db]
+                return  # Garder les mêmes items, moins de 24h écoulées
+        except Exception as e:
+            print(f"Erreur lors du chargement des items du jour: {e}")
 
-    # Sinon, on génère de nouveaux items
+    # Générer de nouveaux items
     items_disponibles = list(bot.items_db.values())
     k = min(5, len(items_disponibles))
     ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
     DERNIERE_MAJ_ITEMS = datetime.now(timezone.utc)
-
-    # Sauvegarde dans le fichier
-    with open(ITEMS_DU_JOUR_PATH, "w") as f:
-        json.dump({
-            "derniere_maj": DERNIERE_MAJ_ITEMS.isoformat(),
-            "items_ids": [item.id for item in ITEMS_DU_JOUR]
-        }, f, indent=2)
+    sauvegarder_items_du_jour()
 
 class HeroBot(commands.Bot):
     def __init__(self):
@@ -243,18 +234,16 @@ class HeroBot(commands.Bot):
         intents.message_content = True
         super().__init__(command_prefix='!', intents=intents)
         
-        # Base de données en mémoire (tu peux remplacer par une vraie DB)
+        # Bases de données en mémoire
         self.heroes_db: Dict[int, Hero] = {}
         self.items_db: Dict[int, Item] = {}
         self.players: Dict[int, PlayerData] = {}
         self.chests_db: Dict[str, ChestType] = {}
         
-        # Charger les données depuis des fichiers JSON
+        # Chargement des données JSON
         self.load_data()
     
     def load_data(self):
-        """Charge les données depuis des fichiers JSON"""
-        # Mapping pour les noms de classes avec accents
         class_mapping = {
             'GÉNÉRAL': 'GENERAL',
             'GLADIATEUR': 'GLADIATEUR',
@@ -266,20 +255,19 @@ class HeroBot(commands.Bot):
             'MAÎTRE MÉCA': 'MAITRE_MECA'
         }
         
+        # Chargement des héros
         try:
             with open('heroes.json', 'r', encoding='utf-8') as f:
                 heroes_data = json.load(f)
                 for hero_data in heroes_data:
-                    # Convertir la string en enum par le nom
                     rarity_name = hero_data['rarity'].upper()
                     hero_rarity = HeroRarity[rarity_name]
-                    
-                    # Gérer les noms de classes avec accents
+
                     hero_class_name = hero_data['hero_class'].upper()
                     if hero_class_name in class_mapping:
                         hero_class_name = class_mapping[hero_class_name]
                     hero_class = HeroClass[hero_class_name]
-                    
+
                     hero = Hero(
                         id=hero_data['id'],
                         name=hero_data['name'],
@@ -298,18 +286,16 @@ class HeroBot(commands.Bot):
             print(f"Erreur de clé dans heroes.json: {e}")
         except Exception as e:
             print(f"Erreur lors du chargement des héros: {e}")
-        
+
+        # Chargement des items
         try:
             with open('items.json', 'r', encoding='utf-8') as f:
                 items_data = json.load(f)
-                # Vérifier si items_data est une liste
                 if isinstance(items_data, list):
                     for item_data in items_data:
-                        # Convertir la string en enum par le nom
                         rarity_name = item_data['rarity'].upper()
                         item_rarity = ItemRarity[rarity_name]
-                        
-                        # Convertir les classes compatibles
+
                         compatible_classes = []
                         for class_name in item_data['compatible_classes']:
                             class_name_upper = class_name.upper()
@@ -317,7 +303,7 @@ class HeroBot(commands.Bot):
                                 class_name_upper = class_mapping[class_name_upper]
                             class_enum = HeroClass[class_name_upper]
                             compatible_classes.append(class_enum)
-                        
+
                         item = Item(
                             id=item_data['id'],
                             name=item_data['name'],
@@ -335,7 +321,8 @@ class HeroBot(commands.Bot):
             print(f"Erreur de clé dans items.json: {e}")
         except Exception as e:
             print(f"Erreur lors du chargement des items: {e}")
-        
+
+        # Chargement des joueurs
         try:
             with open('players.json', 'r', encoding='utf-8') as f:
                 players_data = json.load(f)
@@ -351,7 +338,8 @@ class HeroBot(commands.Bot):
             print("Fichier players.json non trouvé")
         except Exception as e:
             print(f"Erreur lors du chargement des joueurs: {e}")
-        
+
+        # Chargement des coffres
         try:
             with open('chests.json', 'r', encoding='utf-8') as f:
                 chests_data = json.load(f)
@@ -370,13 +358,15 @@ class HeroBot(commands.Bot):
             print("Fichier chests.json non trouvé")
         except Exception as e:
             print(f"Erreur lors du chargement des coffres: {e}")
-        maj_items_du_jour()
+
+        # Mise à jour des items du jour après chargement
+        maj_items_du_jour(self)
     
     def save_data(self):
         players_data = []
         for player in self.players.values():
             player_dict = asdict(player)
-            # Convertir les objets HeroLevel en dictionnaires
+            # Conversion des hero_levels en dicts
             hero_levels_dict = {}
             for hero_id, level_obj in player.hero_levels.items():
                 hero_levels_dict[str(hero_id)] = asdict(level_obj)
@@ -388,37 +378,31 @@ class HeroBot(commands.Bot):
         sauvegarder_items_du_jour()
     
     def get_player(self, user_id: int) -> PlayerData:
-        """Récupère ou crée un joueur"""
         if user_id not in self.players:
             self.players[user_id] = PlayerData(user_id)
         return self.players[user_id]
     
-    def generate_loot(self, chest: ChestType) -> LootResult:
+    def generate_loot(self, chest: ChestType) -> 'LootResult':
         loot = LootResult()
         
-        # Génération des items selon la distribution
         for _ in range(chest.loot_amount):
-            # Sélection de la rareté selon la distribution
             rarities = list(chest.rarity_distribution.keys())
             weights = list(chest.rarity_distribution.values())
             selected_rarity = random.choices(rarities, weights=weights, k=1)[0]
             
-            # Filtrer les items par rareté
             try:
                 rarity_enum = ItemRarity[selected_rarity.upper()]
                 available_items = [item for item in self.items_db.values() if item.rarity == rarity_enum]
-                
                 if available_items:
                     selected_item = random.choice(available_items)
                     loot.items.append(selected_item.id)
             except KeyError:
                 continue
         
-        # Ajouter un peu d'or bonus
         loot.gold = random.randint(50, 200)
-        
         return loot
-    
+
+# Création de l'instance globale du bot
 bot = HeroBot()
 
 @bot.event
