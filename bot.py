@@ -641,61 +641,51 @@ async def profile(ctx):
     
     await ctx.send(embed=embed)
 
-@bot.command(name='buy')
-async def buy(ctx, item_type: str, item_id: int):
-    """Achète un héros ou un item"""
+@bot.command()
+async def buy(ctx, hero_name: str = None, item_name: str = None):
     player = bot.get_player(ctx.author.id)
     
-    if item_type.lower() == "hero":
-        if item_id not in bot.heroes_db:
+    if hero_name:
+        # Chercher un héros par nom (insensible à la casse)
+        hero = next((h for h in bot.heroes_db.values() if h.name.lower() == hero_name.lower()), None)
+        if hero:
+            # logique achat héros ici
+            if hero.id in player.heroes:
+                await ctx.send("❌ Vous avez déjà ce héros.")
+                return
+            if player.gold < hero.price:
+                await ctx.send("❌ Pas assez d'or pour ce héros.")
+                return
+            player.gold -= hero.price
+            player.heroes.append(hero.id)
+            bot.save_data()
+            await ctx.send(f"✅ Vous avez acheté le héros {hero.name} pour {hero.price} gold.")
+            return
+        else:
             await ctx.send("❌ Héros introuvable.")
             return
-        
-        hero = bot.heroes_db[item_id]
-        
-        if item_id in player.heroes:
-            await ctx.send("❌ Vous possédez déjà ce héros.")
-            return
-        
-        if player.gold < hero.price:
-            await ctx.send(f"❌ Pas assez d'argent ! Il vous faut {hero.price} pièces.")
-            return
-        
-        player.gold -= hero.price
-        player.heroes.append(item_id)
-        bot.save_data()
-        
-        embed = discord.Embed(
-            title="✅ Achat réussi!",
-            description=f"Vous avez acheté {hero.rarity.emoji} **{hero.name}** pour {hero.price} 💰",
-            color=discord.Color.green()
-        )
-        await ctx.send(embed=embed)
     
-    elif item_type.lower() == "item":
-        if item_id not in bot.items_db:
+    if item_name:
+        # Chercher un item par nom (insensible à la casse)
+        item = next((i for i in bot.items_db.values() if i.name.lower() == item_name.lower()), None)
+        if item:
+            # logique achat item ici
+            if item.id in player.items:
+                await ctx.send("❌ Vous avez déjà cet item.")
+                return
+            if player.gold < item.price:
+                await ctx.send("❌ Pas assez d'or pour cet item.")
+                return
+            player.gold -= item.price
+            player.items.append(item.id)
+            bot.save_data()
+            await ctx.send(f"✅ Vous avez acheté l'item {item.name} pour {item.price} gold.")
+            return
+        else:
             await ctx.send("❌ Item introuvable.")
             return
-        
-        item = bot.items_db[item_id]
-        
-        if player.gold < item.price:
-            await ctx.send(f"❌ Pas assez d'argent ! Il vous faut {item.price} pièces.")
-            return
-        
-        player.gold -= item.price
-        player.items.append(item_id)
-        bot.save_data()
-        
-        embed = discord.Embed(
-            title="✅ Achat réussi !",
-            description=f"Vous avez acheté {item.rarity.emoji} **{item.name}** pour {item.price} 💰",
-            color=discord.Color.green()
-        )
-        await ctx.send(embed=embed)
     
-    else:
-        await ctx.send("❌ Type invalide. Utilisez `hero` ou `item`")
+    await ctx.send("❌ Veuillez préciser soit un héros, soit un item à acheter.")
 
 @bot.command(name='heros')
 async def my_heroes(ctx):
@@ -1012,9 +1002,6 @@ class PaginationButton(Button):
 
 @bot.command(name="shop")
 async def shop(ctx):
-    print("Héros chargés :")
-    for hero_id, hero in bot.heroes_db.items():
-        print(f"{hero_id} - {hero.name} - Prix : {hero.price}")
     maj_items_du_jour(bot)
     view = BoutiqueView(ctx.author)
     embed = await view.create_page_embed()
