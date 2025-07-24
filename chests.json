@@ -155,30 +155,5 @@
     "loot_amount": 4,
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Magdragon.png",
     "description": "Un coffre contenant une pièce de l'ensemble Magdragon."
-  },
-  {
-    "name": "Coffre Journalier",
-    "rarity_distribution": {
-      "Commun": 35,
-      "Rare": 30,
-      "Epique": 25,
-      "Légendaire": 9,
-      "Mythique": 1
-    },
-    "loot_amount": 3,
-    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Journalier.png",
-    "description": "Un coffre journalier."
-  },
-   {
-    "name": "Coffre Hebdomadaire",
-    "rarity_distribution": {
-      "Rare": 40,
-      "Epique": 30,
-      "Légendaire": 20,
-      "Mythique": 10
-    },
-    "loot_amount": 5,
-    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Hebdomadaire.png",
-    "description": "Un coffre hebdomadaire."
   }
 ]
