@@ -114,7 +114,7 @@ class Hero:
     image: str
     price: int
     description: str = ""
-    equipped_items: List[int] = None
+    equipped_items: List[int] = None,
     color: str = "#5865F2"
     
     def __post_init__(self):
@@ -156,7 +156,7 @@ class ChestType:
     loot_amount: int
     image: str
     description: str
-    price: int = 0
+    price: int = 0,
     color: str = "#5865F2"
 @dataclass
 class LootResult:
