@@ -164,6 +164,7 @@ class PlayerData:
     items: List[int] = None
     chests: List[str] = None
     hero_levels: Dict[int, 'HeroLevel'] = None  
+    last_daily_claim: Optional[str] = None
 
     def __post_init__(self):
         if self.heroes is None:
@@ -1029,6 +1030,42 @@ async def leaderboard(ctx):
             desc += f"**{rank}. {username}** — {power} ⚡\n"
         embed.description = desc
 
+    await ctx.send(embed=embed)
+
+@bot.command(name="daily")
+async def daily(ctx):
+    player = bot.get_player(ctx.author.id)
+    now = datetime.now(timezone.utc)
+
+    if player.last_daily_claim:
+        last_claim = datetime.fromisoformat(player.last_daily_claim)
+        if now - last_claim < timedelta(hours=24):
+            remaining = timedelta(hours=24) - (now - last_claim)
+            hours, remainder = divmod(remaining.seconds, 3600)
+            minutes = remainder // 60
+            await ctx.send(f"⏳ Tu dois encore attendre {remaining.days}j {hours}h {minutes}min avant de réclamer ton prochain coffre.")
+            return
+
+    chest_name = "Coffre Journalier"  # Tu peux changer selon ta logique
+    chest = bot.chests_db.get(chest_name)
+
+    if not chest:
+        await ctx.send("⚠️ Coffre journalier introuvable.")
+        return
+
+    loot = bot.generate_loot(chest)
+    player.gold += loot.gold
+    player.items.extend(loot.items)
+    player.last_daily_claim = now.isoformat()
+
+    bot.save_data()
+
+    embed = discord.Embed(
+        title="🎁 Coffre journalier ouvert !",
+        description=f"Tu as reçu **{loot.gold} or** et {len(loot.items)} objet(s) !",
+        color=int(chest.color.strip("#"), 16)
+    )
+    embed.set_thumbnail(url=chest.image)
     await ctx.send(embed=embed)
 
 @bot.command(name="shop")
