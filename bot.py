@@ -558,12 +558,19 @@ async def profile(ctx):
         title=f"Profil de {ctx.author.display_name}",
         color=discord.Color.blue()
     )
-    embed.add_field(name="💰 Pièces", value=player.gold, inline=True)
-    embed.add_field(name="🏆 Emblèmes du Triomphe", value=player.emblems, inline=True)
-    embed.add_field(name="👥 Héros", value=len(player.heroes), inline=True)
-    embed.add_field(name="🎒 Items", value=len(player.items), inline=True)
-    embed.add_field(name="📦 Coffres", value=len(player.chests), inline=True)
-    
+    # Ressources
+    embed.add_field(
+        name="💰 Ressources", 
+        value=f"Pièces: {player.gold} 🪙\nEmblèmes: {player.emblems} 🏆", 
+        inline=False
+    )
+    # Collection
+    embed.add_field(
+        name="🎒 Collection", 
+        value=f"Héros: {len(player.heroes)} 👥\nItems: {len(player.items)} ⚔️\nCoffres: {len(player.chests)} 📦", 
+        inline=False
+    )
+
     # Niveau moyen des héros
     if player.heroes and player.hero_levels:
         total_level = sum(player.hero_levels.get(h_id, HeroLevel()).level for h_id in player.heroes)
