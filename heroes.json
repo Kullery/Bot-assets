@@ -31,5 +31,16 @@
     "equipped_items": [],
     "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Cléo1.png",
     "color": "#9009f3"
+  },
+   {
+    "id": 46,
+    "name": "Drac",
+    "rarity": "Légendaire",
+    "hero_class": "Voleur",
+    "price": 15000,
+    "description": "En raison du culte qu'elle voue aux dragons, la ville natale de Drac a été isolée et l'hostilité a fini par se transformer en attaques. Cependant, le destin a conduit Drac à secourir un dragon et à bénéficier des conseils de Tisiphone. Avec le dragon, Drac s'est lancé dans une expédition de vengeance.",
+    "equipped_items": [],
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Drach1.png",
+    "color": "#e5c302"
   }
 ]
