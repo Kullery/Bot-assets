@@ -1016,9 +1016,6 @@ async def shop(ctx):
     for hero_id, hero in bot.heroes_db.items():
         print(f"- {hero_id}: {hero.name}")
     maj_items_du_jour(bot)
-    print("Héros filtrés pour boutique :")
-    for hero in heroes_to_show:
-        print(f"- {hero.id}: {hero.name}")
     view = BoutiqueView(ctx.author)
     embed = await view.create_page_embed()
     await ctx.send(embed=embed, view=view)
