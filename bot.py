@@ -825,15 +825,16 @@ class BoutiqueView(View):
 
     async def create_page_embed(self):
         if self.current_page == "heros":
-            embed.title = "🦸 Héros disponibles"
             heroes_list = list(bot.heroes_db.values())
             if heroes_list:
                 self.hero_index = min(self.hero_index, len(heroes_list) - 1)
                 hero = heroes_list[self.hero_index]
                 
-                # Utilisez la couleur personnalisée du héros
-                embed = discord.Embed(color=get_color_from_hex(hero.color))
-                embed.title = "🦸 Héros disponibles"
+                # Créez l'embed AVEC la couleur personnalisée du héros
+                embed = discord.Embed(
+                    title="🦸 Héros disponibles",
+                    color=get_color_from_hex(hero.color)
+                )
                 
                 embed.set_image(url=hero.image)
                 embed.add_field(name="Nom", value=hero.name, inline=True)
@@ -843,6 +844,12 @@ class BoutiqueView(View):
                 if hero.description:
                     embed.add_field(name="Description", value=hero.description, inline=False)
                 embed.set_footer(text=f"Héros {self.hero_index + 1}/{len(heroes_list)}")
+            else:
+                embed = discord.Embed(
+                    title="🦸 Héros disponibles",
+                    description="Aucun héros disponible",
+                    color=discord.Color.red()
+                )
 
         elif self.current_page == "coffres":
             chests_list = list(bot.chests_db.values())
@@ -850,9 +857,11 @@ class BoutiqueView(View):
                 self.chest_index = min(self.chest_index, len(chests_list) - 1)
                 chest = chests_list[self.chest_index]
                 
-                # Utilisez la couleur personnalisée du coffre
-                embed = discord.Embed(color=get_color_from_hex(chest.color))
-                embed.title = "🎁 Coffres disponibles"
+                # Créez l'embed AVEC la couleur personnalisée du coffre
+                embed = discord.Embed(
+                    title="🎁 Coffres disponibles",
+                    color=get_color_from_hex(chest.color)
+                )
                 
                 embed.add_field(
                     name=f"📦 {chest.name}",
@@ -862,18 +871,40 @@ class BoutiqueView(View):
                 if hasattr(chest, 'image') and chest.image:
                     embed.set_thumbnail(url=chest.image)
                 embed.set_footer(text=f"Coffre {self.chest_index + 1}/{len(chests_list)}")
+            else:
+                embed = discord.Embed(
+                    title="🎁 Coffres disponibles",
+                    description="Aucun coffre disponible",
+                    color=discord.Color.red()
+                )
 
         elif self.current_page == "items":
-            embed = discord.Embed(color=discord.Color.teal())  # Gardez teal pour les items
-            embed.title = "🛡️ Items du jour"
+            embed = discord.Embed(
+                title="🛡️ Items du jour",
+                color=discord.Color.teal()
+            )
             maj_items_du_jour()
-            for item in ITEMS_DU_JOUR:
-                stats_str = ", ".join([f"{k}: +{v}" for k, v in item.stats.items()])
+            if ITEMS_DU_JOUR:
+                for item in ITEMS_DU_JOUR:
+                    stats_str = ", ".join([f"{k}: +{v}" for k, v in item.stats.items()])
+                    embed.add_field(
+                        name=f"{item.rarity.emoji} {item.name}",
+                        value=f"Prix: {item.price} 🪙\nStats: {stats_str}",
+                        inline=True
+                    )
+            else:
                 embed.add_field(
-                    name=f"{item.rarity.emoji} {item.name}",
-                    value=f"Prix: {item.price} 🪙\nStats: {stats_str}",
-                    inline=True
+                    name="Aucun item",
+                    value="Aucun item disponible aujourd'hui",
+                    inline=False
                 )
+        
+        else:
+            # Cas par défaut au cas où
+            embed = discord.Embed(
+                title="❌ Page inconnue",
+                color=discord.Color.red()
+            )
 
         return embed
 
