@@ -948,7 +948,8 @@ class AcheterCoffreButton(Button):
         bot.save_data()
         
         await interaction.response.send_message(
-            f"✅ Coffre **{self.coffre.name}** acheté avec succès pour {self.coffre.price} 🪙!\nUtilisez `!open {self.coffre.name}` pour l'ouvrir."            ephemeral=True
+            f"✅ Coffre **{self.coffre.name}** acheté avec succès pour {self.coffre.price} 🪙!\nUtilisez `!open {self.coffre.name}` pour l'ouvrir.",
+            ephemeral=True
         )
 
 class AcheterHeroButton(Button):
