@@ -794,6 +794,7 @@ async def hero_details(ctx, hero_id: int):
 
 ITEMS_DU_JOUR = []
 DERNIERE_MAJ_ITEMS = None
+ITEMS_DU_JOUR_PATH = "items_du_jour.json"
 
 def charger_items_du_jour():
     """Charge les items du jour depuis le fichier JSON"""
@@ -848,21 +849,34 @@ def sauvegarder_items_du_jour():
 
 def maj_items_du_jour():
     global ITEMS_DU_JOUR, DERNIERE_MAJ_ITEMS
-    
-    # Vérifier si une mise à jour est nécessaire
-    maintenant = datetime.now(timezone.utc)
-    
-    if DERNIERE_MAJ_ITEMS is None or maintenant - DERNIERE_MAJ_ITEMS > timedelta(hours=24):
-        print("Mise à jour des items du jour...")
-        
-        items_disponibles = list(bot.items_db.values())
-        k = min(5, len(items_disponibles))
-        ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
-        DERNIERE_MAJ_ITEMS = maintenant
-        
-        # Sauvegarder les nouveaux items
-        sauvegarder_items_du_jour()
-        print(f"Nouveaux items du jour sélectionnés: {[item.name for item in ITEMS_DU_JOUR]}")
+
+    # Si le fichier existe, on le lit
+    if os.path.exists(ITEMS_DU_JOUR_PATH):
+        with open(ITEMS_DU_JOUR_PATH, "r") as f:
+            data = json.load(f)
+
+        timestamp = data.get("derniere_maj")
+        if timestamp:
+            DERNIERE_MAJ_ITEMS = datetime.fromisoformat(timestamp)
+
+        # Si moins de 24h sont passées, on garde les mêmes items
+        if DERNIERE_MAJ_ITEMS and datetime.now(timezone.utc) - DERNIERE_MAJ_ITEMS < timedelta(hours=24):
+            item_ids = data.get("items_ids", [])
+            ITEMS_DU_JOUR = [bot.items_db[i] for i in item_ids if i in bot.items_db]
+            return  # ✅ Pas besoin de regénérer
+
+    # Sinon, on génère de nouveaux items
+    items_disponibles = list(bot.items_db.values())
+    k = min(5, len(items_disponibles))
+    ITEMS_DU_JOUR = random.sample(items_disponibles, k=k) if k > 0 else []
+    DERNIERE_MAJ_ITEMS = datetime.now(timezone.utc)
+
+    # Sauvegarde dans le fichier
+    with open(ITEMS_DU_JOUR_PATH, "w") as f:
+        json.dump({
+            "derniere_maj": DERNIERE_MAJ_ITEMS.isoformat(),
+            "items_ids": [item.id for item in ITEMS_DU_JOUR]
+        }, f, indent=2)
 
 class BoutiqueView(View):
     def __init__(self, user):
