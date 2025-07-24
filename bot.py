@@ -99,6 +99,12 @@ EQUIPMENT_SLOTS_BY_CLASS = {
     HeroClass.MAITRE_MECA: ["épée", "épée", "casque", "armure", "babiole", "babiole"]
 }
 
+def get_color_from_hex(hex_color):
+    """Convertit une couleur hex en discord.Color"""
+    if hex_color.startswith('#'):
+        hex_color = hex_color[1:]
+    return discord.Color(int(hex_color, 16))
+
 @dataclass
 class Hero:
     id: int
@@ -109,6 +115,7 @@ class Hero:
     price: int
     description: str = ""
     equipped_items: List[int] = None
+    color: str = "#5865F2"
     
     def __post_init__(self):
         if self.equipped_items is None:
@@ -150,6 +157,7 @@ class ChestType:
     image: str
     description: str
     price: int = 0
+    color: str = "#5865F2"
 @dataclass
 class LootResult:
     items: List[int] = field(default_factory=list)
@@ -226,6 +234,7 @@ class HeroBot(commands.Bot):
                         price=hero_data['price'],
                         description=hero_data.get('description', ''),
                         equipped_items=hero_data.get('equipped_items', [])
+                        color=hero_data.get('color', '#5865F2')
                     )
                     self.heroes_db[hero.id] = hero
         except FileNotFoundError:
@@ -299,6 +308,7 @@ class HeroBot(commands.Bot):
                         image=chest_data['image'],
                         description=chest_data['description'],
                         price=chest_data.get('price', 300)
+                        color=chest_data.get('color', '#5865F2')
                     )
                     self.chests_db[chest.name] = chest
         except FileNotFoundError:
@@ -814,14 +824,17 @@ class BoutiqueView(View):
             self.add_item(PaginationButton("➡️", 1, "coffres"))
 
     async def create_page_embed(self):
-        embed = discord.Embed(color=discord.Color.teal())
-
         if self.current_page == "heros":
             embed.title = "🦸 Héros disponibles"
             heroes_list = list(bot.heroes_db.values())
             if heroes_list:
                 self.hero_index = min(self.hero_index, len(heroes_list) - 1)
                 hero = heroes_list[self.hero_index]
+                
+                # Utilisez la couleur personnalisée du héros
+                embed = discord.Embed(color=get_color_from_hex(hero.color))
+                embed.title = "🦸 Héros disponibles"
+                
                 embed.set_image(url=hero.image)
                 embed.add_field(name="Nom", value=hero.name, inline=True)
                 embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
@@ -832,11 +845,15 @@ class BoutiqueView(View):
                 embed.set_footer(text=f"Héros {self.hero_index + 1}/{len(heroes_list)}")
 
         elif self.current_page == "coffres":
-            embed.title = "🎁 Coffres disponibles"
             chests_list = list(bot.chests_db.values())
             if chests_list:
                 self.chest_index = min(self.chest_index, len(chests_list) - 1)
                 chest = chests_list[self.chest_index]
+                
+                # Utilisez la couleur personnalisée du coffre
+                embed = discord.Embed(color=get_color_from_hex(chest.color))
+                embed.title = "🎁 Coffres disponibles"
+                
                 embed.add_field(
                     name=f"📦 {chest.name}",
                     value=f"Prix: {chest.price} 🪙\n{chest.description}",
@@ -847,6 +864,7 @@ class BoutiqueView(View):
                 embed.set_footer(text=f"Coffre {self.chest_index + 1}/{len(chests_list)}")
 
         elif self.current_page == "items":
+            embed = discord.Embed(color=discord.Color.teal())  # Gardez teal pour les items
             embed.title = "🛡️ Items du jour"
             maj_items_du_jour()
             for item in ITEMS_DU_JOUR:

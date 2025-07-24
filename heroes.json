@@ -7,7 +7,8 @@
     "price": 100,
     "description": "Prince déchu des Ailes d'argent, Avalon cherche à dresser une armée et à récupérer sa terre natale sur le lointain continent de Drake.",
     "equipped_items": [],
-    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Avalon1.png"
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Avalon1.png",
+    "color": "#f30909"
   },
   {
     "id": 2,
@@ -17,7 +18,8 @@
     "price": 150,
     "description": "Il est très pratique d'avoir un grand-père roi. Il vous laisse manquer les cours pour aller vous amuser sur le champ de bataille et tester vos nouvelles inventions.",
     "equipped_items": [],
-    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Nora1.png"
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Nora1.png",
+    "color": "#0b959e"
   },
   {
     "id": 3,
@@ -27,6 +29,7 @@
     "price": 150,
     "description": "Ultime enfant des mythes de Sphinx, Cléo est l'héritière d'une connaissance infinie. Elle méprise les ignorants, et pourtant, ceux-ci n'apprennent jamais à éviter sa colère.",
     "equipped_items": [],
-    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Cléo1.png"
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Héros/Cléo1.png",
+    "color": "#9009f3"
   }
 ]
