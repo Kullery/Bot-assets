@@ -307,7 +307,7 @@ class HeroBot(commands.Bot):
                         loot_amount=chest_data['loot_amount'],
                         image=chest_data['image'],
                         description=chest_data['description'],
-                        price=chest_data.get('price', 300)
+                        price=chest_data.get('price', 300),
                         color=chest_data.get('color', '#5865F2')
                     )
                     self.chests_db[chest.name] = chest
