@@ -114,7 +114,7 @@ class Hero:
     image: str
     price: int
     description: str = ""
-    equipped_items: List[int] = None,
+    equipped_items: List[int] = None
     color: str = "#5865F2"
     
     def __post_init__(self):
@@ -156,7 +156,7 @@ class ChestType:
     loot_amount: int
     image: str
     description: str
-    price: int = 0,
+    price: int = 0
     color: str = "#5865F2"
 @dataclass
 class LootResult:
@@ -233,7 +233,7 @@ class HeroBot(commands.Bot):
                         image=hero_data['image'],
                         price=hero_data['price'],
                         description=hero_data.get('description', ''),
-                        equipped_items=hero_data.get('equipped_items', [])
+                        equipped_items=hero_data.get('equipped_items', []),
                         color=hero_data.get('color', '#5865F2')
                     )
                     self.heroes_db[hero.id] = hero
