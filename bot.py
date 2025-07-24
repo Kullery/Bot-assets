@@ -912,7 +912,7 @@ class BoutiqueView(View):
                 title="🛡️ Items du jour",
                 color=discord.Color.teal()
             )
-            maj_items_du_jour()
+            maj_items_du_jour(bot)
             if ITEMS_DU_JOUR:
                 for item in ITEMS_DU_JOUR:
                     stats_str = ", ".join([f"{k}: +{v}" for k, v in item.stats.items()])
