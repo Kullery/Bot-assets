@@ -166,7 +166,7 @@ class ChestType:
 class LootResult:
     items: List[int] = field(default_factory=list)
     gold: int = 0
-    triumph_emblems: int = 0
+    emblems: int = 0
 
 @dataclass
 class HeroLevel:
@@ -481,7 +481,7 @@ async def open_chest(ctx, *, chest_name: str):
     
     # Ajouter le loot au joueur
     player.gold += loot.gold
-    player.triumph_emblems += loot.triumph_emblems
+    player.emblems += loot.emblems
     player.items.extend(loot.items)
     
     # Affichage des récompenses
@@ -496,8 +496,8 @@ async def open_chest(ctx, *, chest_name: str):
     if loot.gold > 0:
         embed.add_field(name="💰 Pièces", value=f"+{loot.gold}", inline=True)
     
-    if loot.triumph_emblems > 0:
-        embed.add_field(name="🏆 Emblèmes du Triomphe", value=f"+{loot.triumph_emblems}", inline=True)
+    if loot.emblems > 0:
+        embed.add_field(name="🏆 Emblèmes du Triomphe", value=f"+{loot.emblems}", inline=True)
     
     if loot.items:
         items_text = []
@@ -559,7 +559,7 @@ async def profile(ctx):
         color=discord.Color.blue()
     )
     embed.add_field(name="💰 Pièces", value=player.gold, inline=True)
-    embed.add_field(name="🏆 Emblèmes du Triomphe", value=player.triumph_emblems, inline=True)
+    embed.add_field(name="🏆 Emblèmes du Triomphe", value=player.emblems, inline=True)
     embed.add_field(name="👥 Héros", value=len(player.heroes), inline=True)
     embed.add_field(name="🎒 Items", value=len(player.items), inline=True)
     embed.add_field(name="📦 Coffres", value=len(player.chests), inline=True)
