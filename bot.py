@@ -844,11 +844,6 @@ class NavigationButton(Button):
             if heroes_list:
                 current_hero = heroes_list[self.view.hero_index]
                 self.view.add_item(AcheterHeroButton(current_hero))
-        
-        elif self.page == "coffres":
-            for chest in bot.chests_db.values():
-                self.view.add_item(AcheterCoffreButton(chest))
-        
         elif self.page == "items":
             maj_items_du_jour()
             for item in ITEMS_DU_JOUR:
@@ -932,25 +927,6 @@ class PaginationButton(Button):
         self.view.add_item(AcheterHeroButton(hero))
         
         await interaction.response.edit_message(embed=embed, view=self.view)
-
-class AcheterCoffreButton(Button):
-    def __init__(self, coffre):
-        super().__init__(label=f"Acheter {coffre.name} ({coffre.price}🪙)", style=discord.ButtonStyle.success)
-        self.coffre = coffre
-
-    async def callback(self, interaction: discord.Interaction):
-        player = bot.get_player(interaction.user.id)
-        if player.gold < self.coffre.price:
-            return await interaction.response.send_message(f"❌ Pas assez d'or. Il vous faut {self.coffre.price} 🪙.", ephemeral=True)
-
-        player.gold -= self.coffre.price
-        player.chests.append(self.coffre.name)
-        bot.save_data()
-        
-        await interaction.response.send_message(
-            f"✅ Coffre **{self.coffre.name}** acheté avec succès pour {self.coffre.price} 🪙!\nUtilisez `!open {self.coffre.name}` pour l'ouvrir.",
-            ephemeral=True
-        )
 
 class AcheterHeroButton(Button):
     def __init__(self, hero):
