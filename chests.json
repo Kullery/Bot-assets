@@ -192,9 +192,9 @@
       "Mythique": 3
     },
     "loot_amount": 4,
-    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Ecaille_de_dragon.png",
-    "description": "Un coffre contenant une pièce de l'ensemble Ecaille de dragon.",
-    "color": "#f90fef",
+    "image": "https://raw.githubusercontent.com/Kullery/Bot-assets/main/Coffres/Coffre_Journalier.png",
+    "description": "Un coffre quotidien rempli de hasard.",
+    "color": "#0A44F2",
     "hidden": true
   }
 ]

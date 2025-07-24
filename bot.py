@@ -1048,7 +1048,17 @@ async def daily(ctx):
             remaining = timedelta(hours=24) - (now - last_claim)
             hours, remainder = divmod(remaining.seconds, 3600)
             minutes = remainder // 60
-            await ctx.send(f"⏳ Tu dois encore attendre {remaining.days}j {hours}h {minutes}min avant de réclamer ton prochain coffre.")
+            # Formatage du temps restant sans afficher 0j
+            time_parts = []
+            if remaining.days > 0:
+                time_parts.append(f"{remaining.days}j")
+            if hours > 0:
+                time_parts.append(f"{hours}h")
+            if minutes > 0:
+                time_parts.append(f"{minutes}min")
+
+            time_str = " ".join(time_parts) if time_parts else "moins d'une minute"
+            await ctx.send(f"⏳ Tu dois encore attendre {time_str} avant de réclamer ton prochain coffre.")
             return
 
     chest_name = "Coffre Journalier"
