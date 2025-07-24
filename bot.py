@@ -1012,7 +1012,13 @@ class PaginationButton(Button):
 
 @bot.command(name="shop")
 async def shop(ctx):
+    print("Héros dans heroes_db :")
+    for hero_id, hero in bot.heroes_db.items():
+        print(f"- {hero_id}: {hero.name}")
     maj_items_du_jour(bot)
+    print("Héros filtrés pour boutique :")
+    for hero in heroes_to_show:
+        print(f"- {hero.id}: {hero.name}")
     view = BoutiqueView(ctx.author)
     embed = await view.create_page_embed()
     await ctx.send(embed=embed, view=view)
@@ -1049,4 +1055,3 @@ async def help_command(ctx):
 if __name__ == "__main__":
     token = os.getenv("DISCORD_TOKEN")
     bot.run(token)
-    
