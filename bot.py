@@ -1049,3 +1049,4 @@ async def help_command(ctx):
 if __name__ == "__main__":
     token = os.getenv("DISCORD_TOKEN")
     bot.run(token)
+    
