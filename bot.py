@@ -1142,7 +1142,9 @@ async def help_command(ctx):
         "`!equip <hero_id> <item_id>` - Équipe un item",
         "`!unequip <hero_id> <item_id>` - Déséquipe un item",
         "`!info <hero_id>` - Détails d'un héros",
-        "`!open <nom du coffre>` - Ouvrir un coffre spécifique",   
+        "`!open <nom du coffre>` - Ouvrir un coffre spécifique",
+        "`!daily` - Récupérer son coffre journalier",
+        "`!leaderboard` - Consulter le classement des joueurs"
         ]
     
     embed.add_field(
