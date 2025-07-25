@@ -357,7 +357,8 @@ class HeroBot(commands.Bot):
                         user_id=player_data['user_id'],
                         gold=player_data['gold'],
                         heroes=player_data['heroes'],
-                        items=player_data['items']
+                        items=player_data['items'],
+                        last_daily_claim=player_data.get('last_daily_claim', None)
                     )
                     self.players[player.user_id] = player
         except FileNotFoundError:
