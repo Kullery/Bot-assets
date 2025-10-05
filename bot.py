@@ -433,72 +433,82 @@ class HeroBot(commands.Bot):
 # Création de l'instance globale du bot
 bot = HeroBot()
 
+# ========== COMMANDES SLASH (pour le badge Developer) ==========
+
+@bot.tree.command(name="info", description="Affiche les informations du bot HeroBot")
+async def info_slash(interaction: discord.Interaction):
+    """Commande slash pour afficher les infos du bot"""
+    player = bot.get_player(interaction.user.id)
+    
+    embed = discord.Embed(
+        title="🎮 HeroBot - Informations",
+        description="Bot de gestion de héros et d'items RPG",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="💰 Ton or", value=f"{player.gold} gold", inline=True)
+    embed.add_field(name="🦸 Tes héros", value=f"{len(player.heroes)} héros", inline=True)
+    embed.add_field(name="⚔️ Tes items", value=f"{len(player.items)} items", inline=True)
+    embed.add_field(
+        name="📋 Commandes",
+        value="Utilise `!help` pour voir toutes les commandes disponibles",
+        inline=False
+    )
+    embed.set_footer(text=f"Demandé par {interaction.user.name}")
+    
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="stats", description="Affiche tes statistiques de joueur")
+async def stats_slash(interaction: discord.Interaction):
+    """Commande slash pour afficher les stats du joueur"""
+    player = bot.get_player(interaction.user.id)
+    
+    total_heroes = len(player.heroes)
+    total_items = len(player.items)
+    
+    # Compte des raretés de héros
+    hero_rarities = {}
+    for hero_id in player.heroes:
+        if hero_id in bot.heroes_db:
+            rarity = bot.heroes_db[hero_id].rarity.name
+            hero_rarities[rarity] = hero_rarities.get(rarity, 0) + 1
+    
+    embed = discord.Embed(
+        title=f"📊 Statistiques de {interaction.user.name}",
+        color=discord.Color.gold()
+    )
+    embed.add_field(name="💰 Or", value=f"{player.gold} gold", inline=True)
+    embed.add_field(name="🦸 Héros", value=f"{total_heroes}", inline=True)
+    embed.add_field(name="⚔️ Items", value=f"{total_items}", inline=True)
+    
+    if hero_rarities:
+        rarities_text = "\n".join([f"{rarity}: {count}" for rarity, count in hero_rarities.items()])
+        embed.add_field(name="🌟 Raretés des héros", value=rarities_text, inline=False)
+    
+    embed.set_thumbnail(url=interaction.user.display_avatar.url)
+    embed.set_footer(text=f"Demandé par {interaction.user.name}")
+    
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="ping", description="Vérifie la latence du bot")
+async def ping_slash(interaction: discord.Interaction):
+    """Commande slash simple pour tester le bot"""
+    latency = round(bot.latency * 1000)
+    await interaction.response.send_message(f"🏓 Pong! Latence: {latency}ms")
+
+# ========== ÉVÉNEMENT DE DÉMARRAGE ==========
+
 @bot.event
 async def on_ready():
     print(f'{bot.user} est connecté !')
-
-@bot.command(name='lvl_heros')
-async def hero_level_info(ctx, hero_id: int = None):
-    """Affiche les niveaux des héros"""
-    player = bot.get_player(ctx.author.id)
     
-    if hero_id:
-        # Afficher un héros spécifique
-        if hero_id not in player.heroes:
-            await ctx.send("❌ Vous ne possédez pas ce héros!")
-            return
-        
-        if hero_id not in player.hero_levels:
-            player.hero_levels[hero_id] = HeroLevel()
-        
-        hero = bot.heroes_db[hero_id]
-        hero_level = player.hero_levels[hero_id]
-        
-        embed = discord.Embed(
-            title=f"📊 Niveau de {hero.name}",
-            color=discord.Color.blue()
-        )
-        embed.set_thumbnail(url=hero.image)
-        embed.add_field(name="Niveau", value=hero_level.level, inline=True)
-        embed.add_field(name="Expérience", value=f"{hero_level.experience}/{hero_level.max_experience}", inline=True)
-        embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
-        
-        # Barre de progression
-        progress = hero_level.experience / hero_level.max_experience
-        bar_length = 20
-        filled = int(progress * bar_length)
-        bar = "█" * filled + "░" * (bar_length - filled)
-        
-        embed.add_field(
-            name="Progression",
-            value=f"`{bar}` {progress*100:.1f}%",
-            inline=False
-        )
-        
-    else:
-        # Afficher tous les héros
-        embed = discord.Embed(
-            title=f"📊 Niveaux des héros de {ctx.author.display_name}",
-            color=discord.Color.blue()
-        )
-        
-        if not player.heroes:
-            embed.description = "Aucun héros possédé"
-        else:
-            for hero_id in player.heroes:
-                hero = bot.heroes_db[hero_id]
-                if hero_id not in player.hero_levels:
-                    player.hero_levels[hero_id] = HeroLevel()
-                
-                hero_level = player.hero_levels[hero_id]
-                
-                embed.add_field(
-                    name=f"{hero.rarity.emoji} {hero.name}",
-                    value=f"Niveau {hero_level.level}\nXP: {hero_level.experience}/{hero_level.max_experience}",
-                    inline=True
-                )
-    
-    await ctx.send(embed=embed)
+    # IMPORTANT : Synchronisation des commandes slash
+    try:
+        synced = await bot.tree.sync()
+        print(f'✅ {len(synced)} commande(s) slash synchronisée(s)')
+        for cmd in synced:
+            print(f'  - /{cmd.name}')
+    except Exception as e:
+        print(f'❌ Erreur lors de la synchronisation des commandes slash: {e}')
 
 @bot.command(name='open')
 async def open_chest(ctx, *, chest_name: str):
@@ -833,10 +843,15 @@ async def hero_details(ctx, *, hero_name: str):
 
     hero = bot.heroes_db[hero_id]
 
+    # Gestion du niveau du héros
+    if hero_id not in player.hero_levels:
+        player.hero_levels[hero_id] = HeroLevel()
+    hero_level = player.hero_levels[hero_id]
+
     try:
         couleur = int(hero.color.lstrip("#"), 16)
     except AttributeError:
-        couleur = 0x3498db  # couleur par défaut si pas de champ 'color'
+        couleur = 0x3498db
 
     embed = discord.Embed(
         title=f"{hero.rarity.emoji} {hero.name}",
@@ -846,10 +861,24 @@ async def hero_details(ctx, *, hero_name: str):
     embed.set_image(url=hero.image)
     embed.add_field(name="Classe", value=hero.hero_class.value, inline=True)
     embed.add_field(name="Rareté", value=hero.rarity.name, inline=True)
+    embed.add_field(name="Niveau", value=f"{hero_level.level}", inline=True)
+    
+    # Barre de progression XP
+    progress = hero_level.experience / hero_level.max_experience
+    bar_length = 10
+    filled = int(progress * bar_length)
+    bar = "█" * filled + "░" * (bar_length - filled)
+    
+    embed.add_field(
+        name="Expérience", 
+        value=f"`{bar}` {hero_level.experience}/{hero_level.max_experience}", 
+        inline=False
+    )
+    
     embed.add_field(name="Items équipés", value=f"{len(hero.equipped_items)}/6", inline=True)
 
     puissance = hero.calculer_puissance(bot.items_db)
-    embed.add_field(name="Puissance", value=f"{puissance} ⚡", inline=False)
+    embed.add_field(name="Puissance", value=f"{puissance} ⚡", inline=True)
 
     if hero.equipped_items:
         items_list = []
